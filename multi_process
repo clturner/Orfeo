@@ -1,0 +1,269 @@
+#!/bin/bash
+
+DEBUG=$1
+OUTPUT_DIR=$2
+INPUT_DIR=$3
+IMAGE_TYPE=$4
+PROCESS=$5
+PATH_TO_IMAGES=$6
+NUM_PATHS=$7
+WORKFLOW=$8
+
+PROCESS=$( echo $PROCESS | tr "%" " " )
+
+if [ $DEBUG = "d" ]; then
+    echo $DEBUG
+    echo $OUTPUT_DIR
+    echo $INPUT_DIR
+    echo $IMAGE_TYPE
+    echo $PROCESS
+    echo $PATH_TO_IMAGES
+    echo $NUM_PATHS
+    echo $WORKFLOW
+    echo multi process start values
+    read sjkdjcodsg
+fi
+
+get_num_paths () {
+    char="%"
+    NUM_PATHS=$( echo "${PATH_TO_IMAGES}" | awk -F"${char}" '{print NF-1}' )
+    NUM_PATHS=$((NUM_PATHS+1))
+}
+
+get_file_names () {
+    if [ $count -eq 1 ]; then
+	file_dir=$INPUT_DIR
+    else
+	file_dir=$OUTPUT_DIR
+    fi
+    new_PATH_TO_IMAGES=""
+    for file in `ls -l $file_dir`;
+    do
+	if [ $num -eq 9 ] && [[ $file  =~ ".zip" ]];
+	then
+	    new_PATH_TO_IMAGES="$new_PATH_TO_IMAGES $file_dir/$file"
+	elif [[ $file =~ ".tif" && ${file} != *"tif."* ]];
+        then
+	    new_PATH_TO_IMAGES="$new_PATH_TO_IMAGES $file_dir/$file"
+	fi
+    done
+    PATH_TO_IMAGES=$( echo $new_PATH_TO_IMAGES | tr " " "%" )
+}
+
+# Count the number of process entered into the process string
+count=0
+for num in $PROCESS;
+do
+    count=$((count+1))
+done
+
+# Set process string values to the corresponding automated workflow
+if [ "$count" -eq 1 ] && [ "$PROCESS" -eq 11 ] # Then this is a workflow without ROI extraction
+then
+    WORKFLOW=11
+    PROCESS="9 7 1 4 6"
+elif [ "$count" -eq 1 ] && [ "$PROCESS" -eq 12 ]
+then
+    WORKFLOW=12 # Then this is a workflow with ROI extraction
+    PROCESS="9 7 8 1 4 6"
+else
+    PROCESS=$PROCESS
+fi
+
+count=0
+for num in $PROCESS;
+do
+    count=$((count+1))
+    if [ "$num" = 1 ]
+    then
+	PROCESS=$( echo $PROCESS | tr " " "%" )
+	get_file_names $OUTPUT_DIR $num
+	get_num_paths $PATH_TO_IMAGES 
+	PATH_TO_IMAGES=$( echo $new_PATH_TO_IMAGES | tr " " "%" )
+
+	if [ $DEBUG = "d" ]; then
+	    echo ! Doing radiometric indices $num in $PROCESS
+	    echo $OUTPUT_DIR
+            echo $IMAGE_TYPE
+            echo $PROCESS
+            echo $PATH_TO_IMAGES
+            echo $NUM_PATHS
+            echo $WORKFLOW
+            echo multipro radiometric num loop
+            read sodcosh
+	fi
+	radiometric_indices $DEBUG $OUTPUT_DIR $IMAGE_TYPE $PROCESS $PATH_TO_IMAGES $NUM_PATHS $WORKFLOW
+    elif [ "$num" = 2 ]
+    then
+	PROCESS=$( echo $PROCESS | tr " " "%" )
+	get_file_names $OUTPUT_DIR $INPUT_DIR $num $count
+	get_num_paths $PATH_TO_IMAGES
+	PATH_TO_IMAGES=$( echo $new_PATH_TO_IMAGES | tr " " "%" )
+
+        if [ $DEBUG = "d" ]; then
+	    echo ! Doing bandmath $num in $PROCESS
+	    echo $OUTPUT_DIR
+            echo $IMAGE_TYPE
+            echo $PROCESS
+            echo $PATH_TO_IMAGES
+            echo $NUM_PATHS
+            echo $WORKFLOW
+            echo multipro add by bandmath num loop
+            read sodcosh
+	    fi
+	add_band_math $DEBUG $OUTPUT_DIR $IMAGE_TYPE $PROCESS $PATH_TO_IMAGES $NUM_PATHS $WORKFLOW
+    elif [ "$num" = 3 ]
+    then
+        PROCESS=$( echo $PROCESS | tr " " "%" )
+        get_file_names $OUTPUT_DIR $num
+        get_num_paths $PATH_TO_IMAGES
+        PATH_TO_IMAGES=$( echo $new_PATH_TO_IMAGES | tr " " "%" )
+
+	if [ $DEBUG = "d" ]; then
+            echo ! Doing remove_band $num in $PROCESS
+            echo $OUTPUT_DIR
+            echo $IMAGE_TYPE
+            echo $PROCESS
+            echo $PATH_TO_IMAGES
+            echo $NUM_PATHS
+            echo $WORKFLOW
+            echo multipro BandMath num loop
+            read sodcosh
+	fi
+	band_math $DEBUG $OUTPUT_DIR $IMAGE_TYPE $PROCESS $PATH_TO_IMAGES $NUM_PATHS $WORKFLOW
+    elif [ "$num" = 4 ]
+    then
+	PROCESS=$( echo $PROCESS | tr " " "%" )
+	get_file_names $OUTPUT_DIR $num
+	get_num_paths $PATH_TO_IMAGES
+	PATH_TO_IMAGES=$( echo $new_PATH_TO_IMAGES | tr " " "%" )
+
+	if [ $DEBUG = "d" ]; then
+	    echo ! Doing remove_band $num in $PROCESS
+	    echo $OUTPUT_DIR
+            echo $IMAGE_TYPE
+            echo $PROCESS
+            echo $PATH_TO_IMAGES
+            echo $NUM_PATHS
+            echo $WORKFLOW
+            echo multipro remove_band num loop
+            read sodcosh
+	fi
+	remove_band $DEBUG $OUTPUT_DIR $IMAGE_TYPE $PROCESS $PATH_TO_IMAGES $NUM_PATHS $WORKFLOW
+    elif [ "$num" = 5 ]
+    then
+	PROCESS=$( echo $PROCESS | tr " " "%" )
+	get_file_names $OUTPUT_DIR $num
+	get_num_paths $PATH_TO_IMAGES
+	PATH_TO_IMAGES=$( echo $new_PATH_TO_IMAGES | tr " " "%" )
+
+	if [ $DEBUG = "d" ]; then
+	    echo ! Doing concatonate $num in $PROCESS
+	    echo $OUTPUT_DIR
+            echo $IMAGE_TYPE
+            echo $PROCESS
+            echo $PATH_TO_IMAGES
+            echo $NUM_PATHS
+            echo $WORKFLOW
+            echo multipro concatonate num loop
+            read sodcosh
+	fi
+	concatonate $DEBUG $OUTPUT_DIR $IMAGE_TYPE $PROCESS $PATH_TO_IMAGES $NUM_PATHS $WORKFLOW
+    elif [ "$num" = 6 ]
+    then
+	PROCESS=$( echo $PROCESS | tr " " "%" )
+        get_file_names $OUTPUT_DIR $num
+	get_num_paths $PATH_TO_IMAGES
+	PATH_TO_IMAGES=$( echo $new_PATH_TO_IMAGES | tr " " "%" )
+
+	if [ $DEBUG = "d" ]; then
+	    echo ! Doing LSMS $num in $PROCESS
+	    echo $OUTPUT_DIR
+            echo $IMAGE_TYPE
+            echo $PROCESS
+            echo $PATH_TO_IMAGES
+            echo $NUM_PATHS
+            echo $WORKFLOW
+            echo multipro LSMS num loop
+            read sodcosh
+	fi
+        large_scale_mean_shift $DEBUG $OUTPUT_DIR $IMAGE_TYPE $PROCESS $PATH_TO_IMAGES $NUM_PATHS $WORKFLOW
+    elif [ "$num" = 7 ]
+    then
+	PROCESS=$( echo $PROCESS | tr " " "%" )
+        get_file_names $OUTPUT_DIR $num
+	get_num_paths $PATH_TO_IMAGES
+
+	if [ $DEBUG = "d" ]; then
+	    echo ! Doing mosaic $num in $PROCESS
+	    echo $OUTPUT_DIR
+            echo $IMAGE_TYPE
+            echo $PROCESS
+            echo $PATH_TO_IMAGES
+            echo $NUM_PATHS
+            echo $WORKFLOW
+            echo multipro mosaic num loop
+            read sodcosh
+	fi
+        mosaic $DEBUG $OUTPUT_DIR $IMAGE_TYPE $PROCESS $PATH_TO_IMAGES $NUM_PATHS $WORKFLOW
+    elif [ "$num" = 8 ]
+    then
+	PROCESS=$( echo $PROCESS | tr " " "%" )
+	get_file_names $OUTPUT_DIR $num
+	get_num_paths $PATH_TO_IMAGES
+	PATH_TO_IMAGES=$( echo $new_PATH_TO_IMAGES | tr " " "%" )
+
+	if [ $DEBUG = "d" ]; then
+	    echo ! Doing extract_roi $num in $PROCESS
+	    echo $OUTPUT_DIR
+            echo $IMAGE_TYPE
+            echo $PROCESS
+            echo $PATH_TO_IMAGES
+            echo $NUM_PATHS
+            echo $WORKFLOW
+            echo multipro extract_roi num loop
+            read sodcosh
+	fi
+	extract_roi $DEBUG $OUTPUT_DIR $IMAGE_TYPE $PROCESS $PATH_TO_IMAGES $NUM_PATHS $WORKFLOW
+    elif [ "$num" = 9 ]
+    then
+	PROCESS=$( echo $PROCESS | tr " " "%" )
+        get_file_names $OUTPUT_DIR $num
+	get_num_paths $PATH_TO_IMAGES
+	PATH_TO_IMAGES=$( echo $new_PATH_TO_IMAGES | tr " " "%" )
+
+	if [ $DEBUG = "d" ]; then
+	    echo ! Doing unzip $num in $PROCESS
+	    echo $OUTPUT_DIR
+	    echo $IMAGE_TYPE
+	    echo $PROCESS
+	    echo $PATH_TO_IMAGES
+	    echo $NUM_PATHS
+	    echo $WORKFLOW
+	    echo multipro unzip num loop
+	    read sodcosh
+	fi
+	unzip_files $DEBUG $OUTPUT_DIR $IMAGE_TYPE $PROCESS $PATH_TO_IMAGES $NUM_PATHS $WORKFLOW
+    elif [ "$num" = 10 ]
+    then
+	PROCESS=$( echo $PROCESS | tr " " "%" )
+        get_file_names $OUTPUT_DIR $num
+        get_num_paths $PATH_TO_IMAGES
+        PATH_TO_IMAGES=$( echo $new_PATH_TO_IMAGES | tr " " "%" )
+	
+        if [ $DEBUG = "d" ]; then
+            echo ! Doing cloud detect $num in $PROCESS
+            echo $OUTPUT_DIR
+            echo $IMAGE_TYPE
+            echo $PROCESS
+            echo $PATH_TO_IMAGES
+            echo $NUM_PATHS
+            echo $WORKFLOW
+            echo multipro cloud detect num loop
+            read sodcosh
+        fi
+	cloud_detector $DEBUG $OUTPUT_DIR $IMAGE_TYPE $PROCESS $PATH_TO_IMAGES $NUM_PATHS $WORKFLOW
+    else
+	echo no process for that number
+    fi
+done

@@ -1,0 +1,64 @@
+#!/bin/bash
+
+DEBUG=$1
+OUTPUT_DIR=$2
+IMAGE_TYPE=$3
+PROCESS=$4
+PATH_TO_IMAGES=$5
+NUM_PATHS=$6
+WORKFLOW=$7
+
+PATH_TO_IMAGES=$( echo $PATH_TO_IMAGES | tr "%" " ")
+
+if [ $DEBUG == "d" ]; then
+    echo $OUTPUT_DIR
+    echo $IMAGE_TYPE
+    echo $PROCESS
+    echo $PATH_TO_IMAGES
+    echo $NUM_PATHS
+    echo $WORKFLOW
+    echo Cloud Detector start values
+    read ajdsojaso
+fi
+
+# Loop through every file to process
+for file in $PATH_TO_IMAGES;
+do
+    # Create filename for output file
+    full_filename=$( echo $file | rev | cut -d"/" -f1 | rev )
+    filename=$( echo $full_filename | rev | cut -d"." -f2 | rev)
+    
+    # Add the neede radiometric indices to the file
+    otbcli_RadiometricIndices -in $file -list Vegetation:MSAVI Soil:RI \
+        -channels.blue 1 \
+        -channels.green 2 \
+        -channels.red 3 \
+        -channels.nir 4 \
+        -out $OUTPUT_DIR/radios.tif
+
+    # Concatonate the created indices to the original file
+     otbcli_ConcatenateImages -il $file $OUTPUT_DIR/radios.tif \
+	 -out $OUTPUT_DIR/$filename-CLD-BANDS.tif
+    
+    # Expression string for cloud detection 
+    exp_string='(im1b1>1500)&&(im1b2>1400)&&(im1b3>1500)&&(im1b4>2000)&&(im1b5>-888)&&(im1b5<-30)&&(im1b6<0.0006)?256:0'
+
+    # Create a single band image to mask clouds, shadows
+    otbcli_BandMath -il $OUTPUT_DIR/$filename-CLD-BANDS.tif -out $OUTPUT_DIR/$filename-clouds.tif -exp $exp_string
+done
+
+# If the original image is not in the output directory then do not remove
+if [[ $PATH_TO_IMAGES =~ $OUTPUT_DIR ]]; then
+    rm $OUTPUT_DIR/$filename-CLD-BANDS.tif $OUTPUT_DIR/radios.tif
+fi
+
+if [ $DEBUG = "d" ]; then
+    echo $OUTPUT_DIR
+    echo $IMAGE_TYPE
+    echo $PROCESS
+    echo $PATH_TO_IMAGES
+    echo $NUM_PATHS
+    echo $WORKFLOW
+    echo Cloud Detector end values
+    read ajdsojaso
+fi

@@ -1,0 +1,60 @@
+#!/bin/bash
+
+DEBUG=$1
+OUTPUT_DIR=$2
+IMAGE_TYPE=$3
+PROCESS=$4
+PATH_TO_IMAGES=$5
+NUM_PATHS=$6
+pids=$7
+
+PATH_TO_IMAGES=$( echo $PATH_TO_IMAGES | tr "%" " " )
+
+if [ $DEBUG = "d" ]; then
+    echo
+    echo $DEBUG
+    echo $OUTPUT_DIR
+    echo $IMAGE_TYPE
+    echo $PROCESS
+    echo $PATH_TO_IMAGES
+    echo $NUM_PATHS
+    echo $WORKFLOW
+    echo concatonate start
+    read sjkdjcodsg
+fi
+
+# Loop through every file to create a file_string delimited by " "
+#    for input into concatonate algorithm
+file_string=""
+for file in $PATH_TO_IMAGES;
+do
+    # Get filename with and without extension
+    filename=$( echo $file |rev | cut -d"/" -f1 | rev )
+    filename=$( echo $filename | rev | cut -d"." -f2 | rev )
+    # Only collect filenames that end in .tif and discard tif.xml files
+    if [[ $file =~ ".tif" && ${file} != *"tif."* ]];
+    then
+	file_string="$file_string $file"
+    fi
+done
+
+# Concatonate all the requested images into one image
+otbcli_ConcatenateImages -il $file_string -out $OUTPUT_DIR/$IMAGE_TYPE-CO$filename.tif
+
+# Only remoave original images that are in the output directory 
+if [[ $PATH_TO_IMAGES =~ $OUTPUT_DIR ]]; then
+    rm $file_string
+fi
+
+if [ $DEBUG = "d" ]; then
+    echo
+    echo $DEBUG
+    echo $OUTPUT_DIR
+    echo $IMAGE_TYPE
+    echo $PROCESS
+    echo $PATH_TO_IMAGES
+    echo $NUM_PATHS
+    echo $WORKFLOW
+    echo concatonate end
+    read sjkdjcodsg
+fi

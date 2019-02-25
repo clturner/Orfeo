@@ -1,0 +1,180 @@
+#!/bin/bash
+
+DEBUG=$1
+OUTPUT_DIR=$2
+IMAGE_TYPE=$3
+PROCESS=$4
+PATH_TO_IMAGES=$5
+NUM_PATHS=$6
+WORKFLOW=$7
+
+PATH_TO_IMAGES=$( echo $PATH_TO_IMAGES | tr % " ")
+
+if [ $DEBUG = "d" ]; then
+    echo $OUTPUT_DIR
+    echo $IMAGE_TYPE
+    echo $PROCESS
+    echo $PATH_TO_IMAGES
+    echo $NUM_PATHS
+    echo $WORKFLOW
+    echo LSMA start values
+    read ajdsojaso
+fi
+
+get_flag_values () {
+# choose values for MeanShiftSmoothing
+    echo CHOOSE YOUR VALUES FOR MeanShiftSmoothing
+    echo Example: for -spatialr 5, -ranger 10, -thres 0.1, -maxiter 100
+    echo Enter: 5 10 0.1 100
+    read MSS_vars
+    MSS_spatialr=$(echo $MSS_vars | cut -f1 -d " ")
+    MSS_ranger=$(echo $MSS_vars | cut -f2 -d " ")
+    MSS_thres=$(echo $MSS_vars | cut -f3 -d " ")
+    MSS_maxiter=$(echo $MSS_vars | cut -f4 -d " ")
+    echo ============================================================================
+
+    echo
+# choose values for LSMSSegmentation
+    echo CHOOSE YOUR VALUES FOR LSMSSegmentation
+    echo Example: for -spatialr 10, -ranger 15, -minsize 25
+    echo Enter: 10 15 25
+    read LSMSSeg_vars
+    SEG_spatialr=$(echo $LSMSSeg_vars | cut -f1 -d " ")
+    SEG_ranger=$(echo $LSMSSeg_vars | cut -f2 -d " ")
+    SEG_minsize=$(echo $LSMSSeg_vars | cut -f3 -d " ")
+    echo ============================================================================
+    
+# choose values for LSMSSmallRegionsMerging
+    echo CHOOSE YOUR VALUES FOR LSMSSmallRegionsMerging
+    echo Example: for -minsize 10
+    echo Enter: 10
+    read LSMS_srm
+    SRM_minsize=$(echo $LSMS_srm | cut -f1 -d " ")
+}
+
+# For automated workflow get the values from the planet_mines_roads_deforestation_values
+#    text file
+if [ $WORKFLOW -eq 11 ] || [ $WORKFLOW -eq 12 ];
+then
+    MSS_spatialr=$( sed -n '3p' < planet_mines_roads_deforestation_values )
+    MSS_ranger=$( sed -n '4p' < planet_mines_roads_deforestation_values )
+    MSS_thres=$( sed -n '5p' < planet_mines_roads_deforestation_values )
+    MSS_maxiter=$( sed -n '6p' < planet_mines_roads_deforestation_values )
+    SEG_spatialr=$( sed -n '7p' < planet_mines_roads_deforestation_values )
+    SEG_ranger=$( sed -n '8p' < planet_mines_roads_deforestation_values )
+    SEG_minsize=$( sed -n '9p' < planet_mines_roads_deforestation_values )
+    SRM_minsize=$( sed -n '10p' < planet_mines_roads_deforestation_values )
+else
+    # If not an automated workflow and there is more than one image to process
+    #   then ask user if they would like to preform LSMS with different vales
+    #   on each image
+    if [ $NUM_PATHS -gt 1 ]; then
+	echo WOULD YOU LIKE DIFFERENT FLAG VALUES FOR EVERY IMAGE?
+	echo
+	echo TYPE Y OR N
+	read add_diff_flag_values
+    else
+	add_diff_flag_values="N"
+    fi
+fi
+
+# Loop through every image
+count=0
+for file in $PATH_TO_IMAGES;
+do
+    count=$((count+1))
+    if [ $count -eq 1 ] && [ $add_diff_flag_values = "N" ] || [ $add_diff_flag_values = "n" ] \
+	|| [ $add_diff_flag_values = "Y" ] || [ $add_diff_flag_values = "y" ]
+    then
+	get_flag_values
+    fi
+    name=$file
+    name=$( echo $name | rev | cut -d"." -f2 | cut -d"/" -f1 | rev )
+    # Build file names
+    filename=$name-MSS_$MSS_spatialr-$MSS_ranger-$MSS_thres-$MSS_maxiter-SEG_$SEG_spatialr-$SEG_ranger-$SEG_minsize-SRM-$SRM_minsize.tif
+    filename_shp=$name-MSS_$MSS_spatialr-$MSS_ranger-$MSS_thres-$MSS_maxiter-SEG_$SEG_spatialr-$SEG_ranger-$SEG_minsize-SRM-$SRM_minsize.shp
+    filename_raster=$name-MSS_$MSS_spatialr-$MSS_ranger-$MSS_thres-$MSS_maxiter-SEG_$SEG_spatialr-$SEG_ranger-$SEG_minsize-SRM-$SRM_minsize-raster.tif
+    filename_binary=$name-MSS_$MSS_spatialr-$MSS_ranger-$MSS_thres-$MSS_maxiter-SEG_$SEG_spatialr-$SEG_ranger-$SEG_minsize-SRM-$SRM_minsize-binary.tif
+    filename_smooth=$name-MSS_$MSS_spatialr-$MSS_ranger-$MSS_thres-$MSS_maxiter-SEG_$SEG_spatialr-$SEG_ranger-$SEG_minsize-SRM-$SRM_minsize-smooth.tif
+    filename_smooth_pos=$name-MSS_$MSS_spatialr-$MSS_ranger-$MSS_thres-$MSS_maxiter-SEG_$SEG_spatialr-$SEG_ranger-$SEG_minsize-SRM-$SRM_minsize-smooth_pos.tif
+    filename_init_seg=$name-$MSS_spatialr-$MSS_ranger-$MSS_thres-$MSS_maxiter-SEG_$SEG_spatialr-$SEG_ranger-$SEG_minsize-SRM-$SRM_minsize-init_seg.tif
+    filename_init_seg_cm=$name-MSS_$MSS_spatialr-$MSS_ranger-$MSS_thres-$MSS_maxiter-SEG_$SEG_spatialr-$SEG_ranger-$SEG_minsize-SRM-$SRM_minsize-init_seg_cm.tif
+    filename_final_seg=$name-MSS_$MSS_spatialr-$MSS_ranger-$MSS_thres-$MSS_maxiter-SEG_$SEG_spatialr-$SEG_ranger-$SEG_minsize-SRM-$SRM_minsize-final_seg.tif
+    output_folder=$name-LSMS-MSS_$MSS_spatialr-$MSS_ranger-$MSS_thres-$MSS_maxiter-SEG_$SEG_spatialr-$SEG_ranger-$SEG_minsize-SRM_$SRM_minsize
+    mkdir $OUTPUT_DIR/$output_folder
+
+    # Perform the LSMS orefeo toolbox workflow
+    otbcli_MeanShiftSmoothing -in $file -fout $OUTPUT_DIR/$output_folder/$filename_smooth -foutpos $OUTPUT_DIR/$output_folder/$filename_smooth_pos \
+	-spatialr $MSS_spatialr \
+	-ranger $MSS_ranger \
+	-thres $MSS_thres \
+	-maxiter $MSS_maxiter \
+	-modesearch 0
+
+    otbcli_LSMSSegmentation -in $OUTPUT_DIR/$output_folder/$filename_smooth -inpos $OUTPUT_DIR/$output_folder/$filename_smooth_pos -out $OUTPUT_DIR/$output_folder/$filename_init_seg uint32 \
+	-spatialr $SEG_spatialr \
+	-ranger $SEG_ranger \
+	-minsize $SEG_minsize \
+	-tilesizex 500 \
+	-tilesizey 500
+
+
+    otbcli_ColorMapping -in $OUTPUT_DIR/$output_folder/$filename_init_seg -method optimal -out $OUTPUT_DIR/$output_folder/$filename_init_seg_cm uint8
+
+
+    otbcli_LSMSSmallRegionsMerging -in $OUTPUT_DIR/$output_folder/$filename_smooth -inseg $OUTPUT_DIR/$output_folder/$filename_init_seg  -out $OUTPUT_DIR/$output_folder/$filename_final_seg uint32 \
+	-minsize $SRM_minsize \
+	-tilesizex 500 \
+	-tilesizey 500
+
+
+    otbcli_LSMSVectorization -in $file -inseg $OUTPUT_DIR/$output_folder/$filename_final_seg -out $OUTPUT_DIR/$output_folder/$filename_shp
+
+    # If performing and automated workflow get the attribute column to rasterize
+    #    from the planet_mines_roads_deforestation_values text file
+    if [ $WORKFLOW -eq 11 ] || [ $WORKFLOW -eq 12 ]; then
+	attr_column=$( sed -n '11p' < planet_mines_roads_deforestation_values )
+    else
+	# If not an automated workflow than request the attribute column to rasterize
+        #    by from the user
+	echo WHAT ATTRIBUTE COLUMN WOULD YOU LIKE TO RASTERIZE THIS IMAGE BY?
+	echo
+	echo EXAMPLE: meanB0
+	echo
+	read attr_column
+    fi
+
+    otbcli_Rasterization -in $OUTPUT_DIR/$output_folder/$filename_shp \
+	-epsg 32719 \
+	-background 0 \
+	-mode attribute \
+	-mode.attribute.field $attr_column \
+	-spx 0.7 \
+	-spy 0.7 \
+	-out $OUTPUT_DIR/$output_folder/$filename_raster
+
+
+#    echo ENTER A THRESHHOLD VALUE
+#    echo example 212
+#    read threshhold
+#    exp_string="im1b1>$threshhold?1:254"
+
+#    otbcli_BandMath -il $OUTPUT_DIR/$output_folder/$filename_raster -out $OUTPUT_DIR/$output_folder/$filename_binary -exp $exp_string
+
+done
+
+# Only remove original files if they are in the output directory
+if [[ $PATH_TO_IMAGES =~ $OUTPUT_DIR ]]; then
+    rm $PATH_TO_IMAGES
+fi
+
+if [ $DEBUG = "d" ]; then
+    echo $OUTPUT_DIR
+    echo $IMAGE_TYPE
+    echo $PROCESS
+    echo $PATH_TO_IMAGES
+    echo $NUM_PATHS
+    echo $WORKFLOW
+    echo LSMS end values
+    read ajdsojaso
+fi

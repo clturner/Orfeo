@@ -1,0 +1,78 @@
+#!/bin/bash
+
+DEBUG=$1
+OUTPUT_DIR=$2
+IMAGE_TYPE=$3
+PROCESS=$4
+PATH_TO_IMAGES=$5
+NUM_PATHS=$6
+WORKFLOW=$7
+
+PATH_TO_IMAGES=$( echo $PATH_TO_IMAGES | tr % " ")
+
+if [ $DEBUG = "d" ]; then
+    echo
+    echo $OUTPUT_DIR
+    echo $IMAGE_TYPE
+    echo $PROCESS
+    echo $PATH_TO_IMAGES
+    echo $NUM_PATHS
+    echo $WORKFLOW
+    echo extract_roi start values
+    read sjkdjcodsg
+fi
+
+# For automated workflows parse $PATH to create absolute path to
+#     all vector files for regions of interest
+if [ $WORKFLOW -eq 11 ] || [ $WORKFLOW -eq 12 ];
+then
+    # Create space delimited list of all paths in $PATH
+    all_paths=$( echo $PATH | tr ":" " " | grep "orfeo" )
+    # Loop through all the paths in $PATH to create the absolute path
+    #     to the directory of shapefiles for regions of interest
+    for path in $all_paths;
+    do
+	# Find the OTB directory in $PATH
+	if [[ $path =~ "OTB" ]] && [[ ! $path =~ "bin" ]] ;
+	then
+	    # Create absolute path to shapefiles of ROI
+	    reference_vector=$path/shapefiles/PLNT_mining_ROI_1.shp
+	    break
+	fi
+    done
+else
+    # If using extract_roi not in a workflow ask user for the absolute
+    #    path to the vector files for creating regions of interest
+    clear
+    echo PLEASE GIVE ME THE ABSOLUTE PATH TO YOUR REFERENCE VECTOR FILE
+    echo 
+    read reference_vector
+fi
+
+# Create the ROI filename addition
+roi_filename=$( echo $reference_vector | rev | cut -d"/" -f1 | rev )
+roi_filename=$( echo $roi_filename | rev | cut -d"." -f2 | rev )
+
+for file in $PATH_TO_IMAGES;
+do
+    # Get the filename without extension
+    filename=$( echo $file | rev | cut -d"/" -f1 | rev )
+    filename=$( echo $filename | rev | cut -d"." -f2 | rev )
+    otbcli_ExtractROI -ram 15000 -in $file -mode fit -mode.fit.vect $reference_vector -out $OUTPUT_DIR/$filename-$roi_filename.tif
+done
+
+# If the orginal files are not in the output directory than do not remove them
+if [[ $PATH_TO_IMAGES =~ $OUTPUT_DIR ]]; then
+    rm $PATH_TO_IMAGES
+fi
+
+if [ $DEBUG = "d" ]; then
+    echo $OUTPUT_DIR
+    echo $IMAGE_TYPE
+    echo $PROCESS
+    echo $PATH_TO_IMAGES
+    echo $NUM_PATHS
+    echo $WORKFLOW
+    echo extract_roi end  values
+    read sjkdjcodsg
+fi

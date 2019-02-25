@@ -1,0 +1,107 @@
+#!/bin/bash
+
+DEBUG=$1
+OUTPUT_DIR=$2
+IMAGE_TYPE=$3
+PROCESS=$4
+PATH_TO_IMAGES=$5
+NUM_PATHS=$6
+WORKFLOW=$7
+
+PATH_TO_IMAGES=$( echo $PATH_TO_IMAGES | tr "%" " ")
+
+if [ $DEBUG = "d" ]; then
+    echo
+    echo $DEBUG
+    echo $OUTPUT_DIR
+    echo $IMAGE_TYPE
+    echo $PROCESS
+    echo $PATH_TO_IMAGES
+    echo $NUM_PATHS
+    echo $WORKFLOW
+    echo MOSAIC start
+    read sjkdjcodsg
+fi
+
+# Function to show the user all files ready to process
+read_files_to_user () {
+    echo
+    echo Here is a list of all the files
+    echo
+    for all_files in $PATH_TO_IMAGES; do
+	echo $all_files
+    done
+    echo
+}
+
+# If executing an automated workflow
+count=0
+if [ $WORKFLOW -eq 11 ] || [ $WORKFLOW -eq 12 ] || [ $IMAGE_TYPE = "PLNT" ]; then
+    image_paths=""
+    save_date=1
+    # Loop through all the images
+    for file in $PATH_TO_IMAGES; do
+	count=$((count+1))
+	# Extract the date of image from file name
+	file_date=$( echo $file | rev | cut -d"/" -f1 | rev | cut -d"_" -f1 )
+	# if the date of the current file in the loop is the same as the date
+	#    of the file in the previous loop then mosaic these images of the same date
+	if [ $file_date = $save_date ] || [ $save_date -eq 1 ]; then
+	    # Create a list of " " dilimeted paths of the same date
+	    image_paths="$image_paths $file"
+	    filename=$file_date
+	    # If this is the last image to process then mosaic all the remaining image paths
+	    if [ $count -eq $NUM_PATHS ]; then
+		otbcli_Mosaic -il $image_paths -out $OUTPUT_DIR/$IMAGE_TYPE-$filename-mosaic.tif
+            fi
+	else
+	    # If the date of the current image is not the same as the date of the previous
+	    #    image in the loop than mosaic all previous images in $image_paths
+	    otbcli_Mosaic -il $image_paths -out $OUTPUT_DIR/$IMAGE_TYPE-$filename-mosaic.tif
+	    image_paths=$file
+	    filename=$file_date
+   
+	fi
+	# Store the current file date as the sav_date for next loop
+	save_date=$file_date
+    done
+else
+    # If not an automated workflow than ask the user for the number of mosaics
+    #    they will create from the images
+    echo HOW MANY DIFFERENT MOSAIC WOULD YOU LIKE TO MAKE FROM YOUR FILES?
+    echo
+    read num_mosaics
+    
+    # For every mosaic requested run this loop
+    for ((i = 0 ; i < $num_mosaics ; i++)); do
+	# Show the user all the files available in directory for mosaic
+	read_files_to_user
+	# Ask user to enter " " dilimeted path of files to mosaic
+	echo PLEASE LIST THE ABSOLUTE PATHS FOR MOSAIC NUMBER $i DELIMITED BY A SPACE  " "
+	echo
+	echo EXAMPLE: path/to/mosaic_file1.tif path/to/mosaic_file2.tif path/to/mosaic_file3.tif
+	echo
+	read mosaic_files
+	# Create filename
+	filename=$( echo $mosaic_files | cut -d" " -f1 | rev | cut -d"/" -f1 | cut -d"." -f2 | rev )
+	otbcli_Mosaic -il $mosaic_files -out $OUTPUT_DIR/$IMAGE_TYPE-$filename-mosaic.tif
+    done
+fi
+
+# If the original files are not in the output directory then do not remove them
+if [[ $PATH_TO_IMAGES =~ $OUTPUT_DIR ]]; then
+    rm $PATH_TO_IMAGES
+fi
+
+if [ $DEBUG = "d" ]; then
+    echo
+    echo $DEBUG
+    echo $OUTPUT_DIR
+    echo $IMAGE_TYPE
+    echo $PROCESS
+    echo $PATH_TO_IMAGES
+    echo $NUM_PATHS
+    echo $WORKFLOW
+    echo MOSAIC end
+    read sjkdjcodsg
+fi

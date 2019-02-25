@@ -1,0 +1,124 @@
+#!/bin/bash
+
+DEBUG=$1
+OUTPUT_DIR=$2
+IMAGE_TYPE=$3
+PROCESS=$4
+PATH_TO_IMAGES=$5
+NUM_PATHS=$6
+WORKFLOW=$7
+
+PATH_TO_IMAGES=$( echo $PATH_TO_IMAGES | tr "%" " ")
+
+if [ $DEBUG = "d" ]; then
+    echo $OUTPUT_DIR
+    echo $IMAGE_TYPE
+    echo $PROCESS
+    echo $PATH_TO_IMAGES
+    echo $NUM_PATHS
+    echo $WORKFLOW
+    echo multipro remove_band start values
+    read oasdhcoasjhvcoashjdcoa
+fi
+
+# If performing and automated workflow get the bands to remove from the 
+#    planet_mines_roads_deforestation_values text file
+if [ $WORKFLOW -eq 11 ] || [ $WORKFLOW -eq 12 ]
+then
+    bands_to_remove=$( sed -n '2p' < planet_mines_roads_deforestation_values )
+else
+    # If its not and automated workflow and there are more than one image to process
+    #    ask user if they would like to remove different bands for every image
+    if [ $NUM_PATHS -gt 1 ]; then
+	clear
+	echo REMOVE DIFFERENT BAND OR BANDS FROM EACH FILE?
+	echo
+	echo TYPE Y OR N
+	echo
+	read remove_diff_bands
+    else
+	remove_diff_bands="N"
+    fi
+
+    # If remaoving different bands for each file ask user in the file loop
+    if [ $remove_diff_bands = "Y" ] || [ $remove_diff_bands = "y" ]
+    then
+	echo WE WILL REMOVE BANDS FOR EACH FILE AS WE GO
+    else
+	# If reamoving the same bands from every image than get the bands to remove
+	echo WHAT BANDS WOULD YOU LIKE REMOVED FROM EVERY FILE
+	echo
+	echo EXAMPLE: 1 2 3
+	echo
+	read bands_to_remove
+    fi
+fi
+
+# Create name extension with removed bands
+#name_removed_bands=$( echo $bands_to_remove | tr " " "_" )
+original_file_list=""
+output_file_list=""
+# Loop through all files
+for file in $PATH_TO_IMAGES;
+do
+    # Create list of orginal files and newly created files for every loop
+    original_file_list+=" "$file
+    file_string=""
+    # Get the number of bands in current file
+    num_bands=$( otbcli_ReadImageInfo -in $file | grep -e 'Number of bands' | cut -d" " -f5 )
+    # Get full filename including extension and filename with extension removed
+    full_filename=$( echo $file |rev | cut -d"/" -f1 | rev )
+    filename=$( echo $full_filename | rev | cut -d"." -f2 | rev )
+
+    if [ $remove_diff_bands = "Y" ] || [ $remove_diff_bands = "y" ]
+    then
+	# Get the number of bands in corrent file
+	num_bands=$( otbcli_ReadImageInfo -in $file | grep -e 'Number of bands' | cut -d" " -f5 )
+	clear
+	echo FOR FILE:
+	echo $full_filename / $num_bands bands
+	echo
+	echo WHAT BANDS WOULD YOU LIKE TO BE REMOVED
+        echo
+        echo EXAMPLE: 1 2 3
+        echo
+        read bands_to_remove
+    fi
+
+    name_removed_bands=$( echo $bands_to_remove | tr " " "_" )
+    # Loop the size of the number of bands present for this file
+    for ((i=1 ; i<=$num_bands ;i++ ))
+    do
+	# If loop number, $i, is in list of $bands_to_remove then do not do add that band
+	char="$i"
+	remove=$( echo "${bands_to_remove}" | awk -F"${char}" '{print NF-1}')
+	if [ $remove -eq 0 ];
+	then
+	     otbcli_BandMath -il $file -out $OUTPUT_DIR/b$i-image.tif -exp "im1b$i"
+	     # Create a space dilimeted list of all added files for remaval after loop
+	     file_string+=" "$OUTPUT_DIR/b$i-image.tif
+	fi
+    done
+    # Concatonate all wanted bands to a single image
+    otbcli_ConcatenateImages -il $file_string -out $OUTPUT_DIR/$filename-RB$name_removed_bands.tif
+    # Create a space delemeted list of all newly created files  
+    output_file_list+=" "$OUTPUT_DIR/$filename-RB$name_removed_bands.tif
+    # Remove all the wnated bands created before concatonation
+    rm $file_string
+done
+
+# Remove the original files containing the unwanted bands only if the are in output directory
+if [[ $PATH_TO_IMAGES =~ $OUTPUT_DIR ]]; then
+    rm $original_file_list
+fi
+
+if [ $DEBUG = "d" ]; then
+    echo $OUTPUT_DIR
+    echo $IMAGE_TYPE
+    echo $PROCESS
+    echo $PATH_TO_IMAGES
+    echo $NUM_PATHS
+    echo $WORKFLOW 
+    echo remove_band end values
+    read sodcoshOW
+fi

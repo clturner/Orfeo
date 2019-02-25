@@ -1,0 +1,138 @@
+#!/bin/bash
+
+DEBUG=$1
+OUTPUT_DIR=$2
+IMAGE_TYPE=$3
+PROCESS=$4
+PATH_TO_IMAGES=$5
+NUM_PATHS=$6
+WORKFLOW=$7
+#DATE=`date '+%Y-%m-%d_%H-%M'`
+
+PATH_TO_IMAGES=$( echo $PATH_TO_IMAGES | tr % " ")
+
+if [ $DEBUG = "d" ]; then
+    echo $OUTPUT_DIR
+    echo $IMAGE_TYPE
+    echo $PROCESS
+    echo $PATH_TO_IMAGES
+    echo $NUM_PATHS
+    echo $WORKFLOW
+    echo radiometric start values
+    read dsjdsjsk
+fi\
+
+if [ $WORKFLOW -eq 11 ] || [ $WORKFLOW -eq 12 ]
+then
+    # If the process is an automated workflow
+    # Do not add different values to each file
+    # Retrive the automated values from text file: planet_mines_roads_deforestation_values
+    add_diff_indices="N"
+    full_indices_list=$( sed -n '1p' < planet_mines_roads_deforestation_values )
+else
+    # Choose if you want to add different radiometric indices to each file
+    if [ $NUM_PATHS -gt 1 ]; then
+	clear
+	echo ADD A DIFFERENT RADIOMETRIC INDICE TO EACH FILE?
+	echo TYPE Y OR N
+	read add_diff_indices
+    else
+	add_diff_indices="N"
+    fi
+
+    if [ $add_diff_indices = "Y" ] || [ $add_diff_indices = "y" ]
+    then
+	echo WE WILL ADD RADIOMETRIC INDICES FOR EACH FILE AS WE GO
+    else
+	# Choose the radiometric Indices to add to each file
+	echo CHOOSE YOUR RADIMETRIC INDICES
+        echo "1. Vegetation:NDVI    7. Vegetation:MSAVI2 13. Water:NDPI"
+        echo "2. Vegetation:TNDVI   8. Vegetation:GEMI   14. Water:NDTI"
+        echo "3. Vegetation:RVI     9. Vegetation:IPVI   15. Soil:RI"
+        echo "4. Vegetation:SAVI   10. Water:NDWI        16. Soil:CI"
+        echo "5. Vegetation:TSAVI  11. Water:NDWI2       17. Soil:BI"
+        echo "6. Vegetation:MSAVI  12. Water:MNDWI       18. Soil:BI2"
+	echo
+	echo PLEASE CHOOSE RADIOMETRIC INDICE/INDICES TO ADD TO ALL FILES
+	echo
+	echo EXAMPLE: Vegetation:NDVI Vegetation:MSAVI2
+	echo
+	read full_indices_list
+    fi
+fi
+
+# Loop through all the files and add radiometric Indices
+original_files_list=""
+output_files_list=""
+for file in $PATH_TO_IMAGES;
+do
+    # Get filename from file path and remove file extension
+    full_filename=$( echo $file | rev | cut -d"/" -f1 | rev )
+    filename=$( echo $full_filename | rev | cut -d"." -f2 | rev )
+    # Make a " " dilimeted list of all original fill paths for removal
+    #     after the loop has been completed
+    original_files_list+=" "$file
+
+    # If adding different Radiometrc Indices to every file choose them
+    #    each time you loop
+    if [ $add_diff_indices = "Y" ] || [  $add_diff_indices = "y" ]
+    then
+	    clear
+	    echo CHOOSE YOUR RADIMETRIC INDICES
+	    echo "1. Vegetation:NDVI    7. Vegetation:MSAVI2 13. Water:NDPI"
+	    echo "2. Vegetation:TNDVI   8. Vegetation:GEMI   14. Water:NDTI"
+	    echo "3. Vegetation:RVI     9. Vegetation:IPVI   15. Soil:RI"
+	    echo "4. Vegetation:SAVI   10. Water:NDWI        16. Soil:CI"
+	    echo "5. Vegetation:TSAVI  11. Water:NDWI2       17. Soil:BI"
+	    echo "6. Vegetation:MSAVI  12. Water:MNDWI       18. Soil:BI2"
+	    echo
+	    echo FOR FILE: $full_filename
+	    echo
+	    echo PLEASE CHOOSE THE RADIOMETRIC INDICE/INDICES YOU WOULD LIKE TO ADD
+	    echo
+	    echo EXAMPLE: Vegetation:NDVI Vegetation:MSAVI2
+	    echo
+	    read full_indices_list
+    fi
+
+    # Create filename extension from all radiometric indices for this loop
+    filename_addition=""
+    for indice in $full_indices_list;
+    do
+	indice=$( echo $indice | cut -f2 -d":")
+	filename_addition+="_"$indice
+    done
+
+    # Create Radiometric Indices band or bands
+    otbcli_RadiometricIndices -in $file -list $full_indices_list \
+        -channels.blue 1 \
+        -channels.green 2 \
+        -channels.red 3 \
+        -channels.nir 4 \
+        -out $OUTPUT_DIR/radio.tif
+
+    # Concatonate the new bands to the original file
+    otbcli_ConcatenateImages -il \
+	$file $OUTPUT_DIR/radio.tif \
+	-out $OUTPUT_DIR/$filename-RI$filename_addition.tif
+
+    # Remove the Radimetric Indices bads created before Concatonation
+    #     with the original files
+    rm $OUTPUT_DIR/radio.tif
+done
+
+# Remove the original files that do not include the requested Radiometric Indices
+if [[ $PATH_TO_IMAGES =~ $OUTPUT_DIR ]]; then
+    rm $original_files_list
+fi
+
+if [ $DEBUG = "d" ]; then
+    echo $OUTPUT_DIR
+    echo $IMAGE_TYPE
+    echo $PROCESS
+    echo $PATH_TO_IMAGES
+    echo $NUM_PATHS
+    echo $WORKFLOW
+    echo radiometric end values
+    read sjkdjcodsg
+fi
