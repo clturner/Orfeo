@@ -1,0 +1,110 @@
+#!/bin/bash
+
+DEBUG=$1
+OUTPUT_DIR=$2
+IMAGE_TYPE=$3
+PROCESS=$4
+PATH_TO_IMAGES=$5
+NUM_PATHS=$6
+WORKFLOW=$7
+
+PATH_TO_IMAGES=$( echo $PATH_TO_IMAGES | tr "%" " ")
+
+if [ $DEBUG = "d" ]; then
+    echo $OUTPUT_DIR
+    echo $IMAGE_TYPE
+    echo $PROCESS
+    echo $PATH_TO_IMAGES
+    echo $NUM_PATHS
+    echo $WORKFLOW
+    echo add band math start values
+    read sodcosh
+fi
+
+# Loop to print image names and number of bands in image for user
+clear
+count=0
+for file in $PATH_TO_IMAGES;
+do
+    count=$((count+1))
+    num_bands=$( otbcli_ReadImageInfo -in $file | grep -e 'Number of bands' | cut -d" " -f5 )
+    filename=$( echo $file |rev | cut -d"/" -f1 | rev )
+    echo Image $count: $filename / $num_bands bands
+done
+
+# If more than one image to process ask
+if [ $NUM_PATHS -gt 1 ]; then
+    echo
+    echo WOULD YOU LIKE ADD A DIFFERENT EXPERESSION STRING FOR EVERY IMAGE?
+    echo
+    echo TYPE Y OR N
+    echo
+    read add_diff_exp
+else
+    add_diff_exp="N"
+fi
+
+# If adding a different band math expression to create layer for every image
+#    then set varibale add_diff_exp to "Y"
+if [ $add_diff_exp = "Y" ] || [ $add_diff_exp = "y" ];
+then
+    add_diff_exp="Y"
+else
+    # If adding the same band math expression to every image then store
+    #    the expression string in the variable, expression
+    echo
+    echo GIVE ME YOUR EXPRESSION STRING TO ADD TO EVERY FILE
+    echo
+    echo EXAMPLE: im1b1+im1b2
+    echo
+    read expression
+fi
+
+# Loop through the image paths to add a layer tp each image
+for file in $PATH_TO_IMAGES;
+do
+    # Get full_filename with extension
+    full_filename=$( echo $file | rev | cut -d"/" -f1 | rev )
+    # Get filename without extension
+    filename=$( echo $full_filename | rev | cut -d"." -f2 | rev)
+    # If adding a different expression string to every file
+    #    collect expression string for every image in the loop
+    if [ $add_diff_exp = "Y" ];
+    then
+	echo
+	echo FOR FILE:
+	echo $full_filename
+	echo
+	echo GIVE ME YOUR EXPRESSION STRING
+	echo
+	echo EXAMPLE: im1b1+im1b2
+	echo
+	read expression
+    fi
+
+    # Create the new single band image with wanted expression
+    otbcli_BandMath -il $PATH_TO_IMAGES -out $OUTPUT_DIR/$filename-bm.tif \
+	-exp $expression
+
+    # Concatonate single band image to original image
+    otbcli_ConcatenateImages -il $file $OUTPUT_DIR/$filename-bm.tif \
+	-out $OUTPUT_DIR/$filename-BM.tif
+
+done
+
+# If original images are not stored in the output directory the do not remove
+#    the images on complettion 
+if [[ $PATH_TO_IMAGES =~ $OUTPUT_DIR ]]; then
+    rm $PATH_TO_IMAGES
+fi
+
+if [ $DEBUG = "d" ]; then
+    echo $OUTPUT_DIR
+    echo $IMAGE_TYPE
+    echo $PROCESS
+    echo $PATH_TO_IMAGES
+    echo $NUM_PATHS
+    echo $WORKFLOW
+    echo add band math end values
+    read sodcosh
+fi
