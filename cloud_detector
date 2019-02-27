@@ -47,6 +47,7 @@ do
     otbcli_BandMath -il $OUTPUT_DIR/$filename-CLD-BANDS.tif -out $OUTPUT_DIR/$filename-clouds.tif -exp $exp_string
 done
 
+rm $OUTPUT_DIR/$filename-CLD-BANDS.tif $OUTPUT_DIR/radios.tif
 # If the original image is not in the output directory then do not remove
 if [[ $PATH_TO_IMAGES =~ $OUTPUT_DIR ]]; then
     rm $OUTPUT_DIR/$filename-CLD-BANDS.tif $OUTPUT_DIR/radios.tif
