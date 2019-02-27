@@ -29,6 +29,7 @@ then
     # Retrive the automated values from text file: planet_mines_roads_deforestation_values
     add_diff_indices="N"
     full_indices_list=$( sed -n '1p' < planet_mines_roads_deforestation_values )
+    full_indices_list=$( echo $full_indices_list | cut -d"-" -f2 )
 else
     # Choose if you want to add different radiometric indices to each file
     if [ $NUM_PATHS -gt 1 ]; then
