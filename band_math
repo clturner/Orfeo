@@ -21,74 +21,43 @@ if [ $DEBUG = "d" ]; then
     read sodcosh
 fi
 
-# Loop to print image names and number of bands in image for user
-clear
-count=0
-for file in $PATH_TO_IMAGES;
-do
-    count=$((count+1))
-    num_bands=$( otbcli_ReadImageInfo -in $file | grep -e 'Number of bands' | cut -d" " -f5 )
-    filename=$( echo $file |rev | cut -d"/" -f1 | rev )
-    echo Image $count: $filename / $num_bands bands
-done
+echo
+echo HOW MANY SINGLE BAND IMAGES WOULD YOU LIKE TO MAKE?
+echo
+echo TYPE A NUMBER
+echo
+read num_images_to_make
 
-# If more than one image to process ask
-if [ $NUM_PATHS -gt 1 ]; then
+# Loop to create the number of single band images as stored in the 
+#   variable $num_images_to_make
+for ((i = 0 ; i < $num_images_to_make ; i++)); do
+    # Display all the files in the input directory along with the file 
+    #    number and the number of bands in each file so they can easily
+    #    make an expression string
+    clear
+    count=0
+    for file in $PATH_TO_IMAGES;
+    do
+	count=$((count+1))
+	num_bands=$( otbcli_ReadImageInfo -in $file | grep -e 'Number of bands' | cut -d" " -f5 )
+	filename=$( echo $file | rev | cut -d"/" -f1 | rev )
+	echo Image $count: $filename / $num_bands bands
+    done
+    # Create filename for current single band image
+    filename="$IMAGE_TYPE-IMAGE_$i-BM.tif"
+    # Ask user for the expression string for this single band image
+    echo GIVE ME YOUR EXPRESSION STRING
     echo
-    echo WOULD YOU LIKE ADD A DIFFERENT EXPERESSION STRING FOR EVERY IMAGE?
-    echo TYPE Y OR N
-    echo
-    read add_diff_exp
-else
-    add_diff_exp="N"
-fi
-
-# If adding a different band math expression to create layer for every image
-#    then set varibale add_diff_exp to "Y"
-if [ $add_diff_exp = "Y" ] || [ $add_diff_exp = "y" ];
-then
-    add_diff_exp="Y"
-else
-    # If adding the same band math expression to every image then store
-    #    the expression string in the variable, expression
-    echo
-    echo GIVE ME YOUR EXPRESSION STRING TO ADD tTO EVERY FILE
-    echo
-    echo EXAMPLE: im1b1+im1b2
+    echo "EXAMPLE: cos( im1b1 ) > cos( im2b1 ) ? im3b1 : im3b2"
     echo
     read expression
-fi
-
-# Loop through the image paths to add a layer tp each image
-for file in $PATH_TO_IMAGES;
-do
-    # Get full_filename with extension
-    full_filename=$( echo $file | rev | cut -d"/" -f1 | rev )
-    # Get filename without extension
-    filename=$( echo $full_filename | rev | cut -d"." -f2 | rev)
-    # If adding a different expression string to every file
-    #    collect expression string for every image in the loop
-    if [ $add_diff_exp = "Y" ];
-    then
-	echo
-	echo FOR FILE:
-	echo $full_filename
-	echo
-	echo GIVE ME YOUR EXPRESSION STRING
-	echo
-	echo EXAMPLE: im1b1+im1b2
-	echo
-	read expression
-    fi
-
     # Create the new single band image with wanted expression
-    otbcli_BandMath -il $PATH_TO_IMAGES -out $OUTPUT_DIR/$filename-bm.tif \
-	-exp $expression
-
+    otbcli_BandMath -il $PATH_TO_IMAGES -out $OUTPUT_DIR/$filename \
+    -exp $expression
 done
 
-# If original images are not stored in the output directory the do not remove
-#    the images on complettion
+# If original images are not stored in the output directory then do not remove
+#    the images on completion
 if [[ $PATH_TO_IMAGES =~ $OUTPUT_DIR ]]; then
     rm $PATH_TO_IMAGES
 fi
