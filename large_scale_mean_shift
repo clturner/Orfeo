@@ -133,7 +133,7 @@ do
     # If performing and automated workflow get the attribute column to rasterize
     #    from the planet_mines_roads_deforestation_values text file
     if [ $WORKFLOW -eq 11 ] || [ $WORKFLOW -eq 12 ]; then
-	attr_column=$( sed -n '11p' < planet_mines_roads_deforestation_values )
+	attr_column=$( sed -n '11p' < planet_mines_roads_deforestation_values | cut -d"-" -f2 )
     else
 	# If not an automated workflow than request the attribute column to rasterize
         #    by from the user
