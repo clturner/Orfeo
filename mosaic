@@ -79,7 +79,8 @@ else
 	clear
 	read_files_to_user
 	# Ask user to enter " " dilimeted path of files to mosaic
-	echo PLEASE LIST THE ABSOLUTE PATHS FOR THE FILES IN MOSAIC NUMBER $i DELIMITED BY A SPACE  " "
+	j=$(($i+1))
+	echo PLEASE LIST THE ABSOLUTE PATHS FOR THE FILES IN MOSAIC NUMBER $j DELIMITED BY A SPACE  " "
 	echo
 	echo EXAMPLE: path/to/mosaic_file1.tif path/to/mosaic_file2.tif path/to/mosaic_file3.tif
 	echo
