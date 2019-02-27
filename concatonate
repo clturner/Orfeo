@@ -39,7 +39,7 @@ do
 done
 
 # Concatonate all the requested images into one image
-otbcli_ConcatenateImages -il $file_string -out $OUTPUT_DIR/$IMAGE_TYPE-CO$filename.tif
+otbcli_ConcatenateImages -il $file_string -out $OUTPUT_DIR/$IMAGE_TYPE-$filename-CO.tif
 
 # Only remoave original images that are in the output directory 
 if [[ $PATH_TO_IMAGES =~ $OUTPUT_DIR ]]; then
