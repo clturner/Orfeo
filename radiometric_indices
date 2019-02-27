@@ -20,9 +20,9 @@ if [ $DEBUG = "d" ]; then
     echo $WORKFLOW
     echo radiometric start values
     read dsjdsjsk
-fi\
+fi
 
-if [ $WORKFLOW -eq 11 ] || [ $WORKFLOW -eq 12 ]
+if [ $WORKFLOW -eq 11 ] || [ $WORKFLOW -eq 12 ];
 then
     # If the process is an automated workflow
     # Do not add different values to each file
@@ -33,8 +33,10 @@ else
     # Choose if you want to add different radiometric indices to each file
     if [ $NUM_PATHS -gt 1 ]; then
 	clear
-	echo ADD A DIFFERENT RADIOMETRIC INDICE TO EACH FILE?
+	echo WOULD YOU LIKE TO ADD A DIFFERENT RADIOMETRIC INDICE TO EACH FILE?
+	echo
 	echo TYPE Y OR N
+	echo
 	read add_diff_indices
     else
 	add_diff_indices="N"
