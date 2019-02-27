@@ -36,7 +36,7 @@ read_files_to_user () {
 
 # If executing an automated workflow
 count=0
-if [ $WORKFLOW -eq 11 ] || [ $WORKFLOW -eq 12 ] || [ $IMAGE_TYPE = "PLNT" ]; then
+if [[ $WORKFLOW -eq 11 ]] || [[ $WORKFLOW -eq 12 ]] || [ $IMAGE_TYPE = "PLNT" ]; then
     image_paths=""
     save_date=1
     # Loop through all the images
@@ -68,16 +68,18 @@ if [ $WORKFLOW -eq 11 ] || [ $WORKFLOW -eq 12 ] || [ $IMAGE_TYPE = "PLNT" ]; the
 else
     # If not an automated workflow than ask the user for the number of mosaics
     #    they will create from the images
-    echo HOW MANY DIFFERENT MOSAIC WOULD YOU LIKE TO MAKE FROM YOUR FILES?
+    clear
+    echo HOW MANY MOSAICS WOULD YOU LIKE TO MAKE FROM YOUR FILES?
     echo
     read num_mosaics
     
     # For every mosaic requested run this loop
     for ((i = 0 ; i < $num_mosaics ; i++)); do
 	# Show the user all the files available in directory for mosaic
+	clear
 	read_files_to_user
 	# Ask user to enter " " dilimeted path of files to mosaic
-	echo PLEASE LIST THE ABSOLUTE PATHS FOR MOSAIC NUMBER $i DELIMITED BY A SPACE  " "
+	echo PLEASE LIST THE ABSOLUTE PATHS FOR THE FILES IN MOSAIC NUMBER $i DELIMITED BY A SPACE  " "
 	echo
 	echo EXAMPLE: path/to/mosaic_file1.tif path/to/mosaic_file2.tif path/to/mosaic_file3.tif
 	echo
