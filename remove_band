@@ -26,6 +26,7 @@ fi
 if [ $WORKFLOW -eq 11 ] || [ $WORKFLOW -eq 12 ]
 then
     bands_to_remove=$( sed -n '2p' < planet_mines_roads_deforestation_values )
+    bands_to_remove=$( echo $bands_to_remove | cut -d"-" -f2 )
 else
     # If its not and automated workflow and there are more than one image to process
     #    ask user if they would like to remove different bands for every image
