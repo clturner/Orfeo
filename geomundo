@@ -37,7 +37,7 @@ fi
 
 # Function to request the absolute path for the output directory
 get_output_dir () {
-    echo PLEASE ENTER THE ABSOLUTE PATH TO YOU PREFERED OUTPUT DIRECTORY
+    echo PLEASE ENTER THE ABSOLUTE PATH TO YOUR PREFERED OUTPUT DIRECTORY
     echo
     read OUTPUT_DIR
     if [ -d $OUTPUT_DIR ]
@@ -52,6 +52,7 @@ get_output_dir () {
 
 # Function to get the image type from the user
 get_image_type () {
+    clear
     echo "WHAT TYPE OF IMAGE WOULD YOU LIKE TO PROCESS"
     echo "1. PERU SAT"
     echo "2. PLANET"
@@ -86,20 +87,23 @@ get_image_type () {
 # Get the the process or processes requested by the user
 get_process_string () {
 echo CHOOSE A PROCESS
+echo
 echo PLEASE CHOOSE A PROCESS
+echo
 echo EXAMPLE: 1 3 7
+echo
 echo " 1. ADD RADIO METRIC INDICES"
 echo " 2. ADD BY BAND MATH (ADD A BAND TO AN IMAGE)"
 echo " 3. BAND MATH (CREATE A SINGLE BAND IMAGE)"
 echo " 4. REMOVE BANDS"
-echo " 5. CONCATONATE"
+echo " 5. CONCATENATE"
 echo " 6. LARGE SCALE MEAN SHIFT"
 echo " 7. MOSAIC"
 echo " 8. EXTRACT ROI (REGION OF INTEREST)"
 echo " 9. UNZIP FILES"
 echo "10. CLOUD DETECTOR"
-echo "11. MINES ROADS & DEFORESTATION WORKFLOW"
-echo "12. MINES ROADS & DEFORESTATION ROI WORKFLOW"
+echo "11. PLANET: MINES ROADS & DEFORESTATION WORKFLOW"
+echo "12. PLANET: MINES ROADS & DEFORESTATION ROI WORKFLOW"
 echo
 read PROCESS
 # If user presses enter without gioving a process
