@@ -56,14 +56,14 @@ get_flag_values () {
 #    text file
 if [ $WORKFLOW -eq 11 ] || [ $WORKFLOW -eq 12 ];
 then
-    MSS_spatialr=$( sed -n '3p' < planet_mines_roads_deforestation_values )
-    MSS_ranger=$( sed -n '4p' < planet_mines_roads_deforestation_values )
-    MSS_thres=$( sed -n '5p' < planet_mines_roads_deforestation_values )
-    MSS_maxiter=$( sed -n '6p' < planet_mines_roads_deforestation_values )
-    SEG_spatialr=$( sed -n '7p' < planet_mines_roads_deforestation_values )
-    SEG_ranger=$( sed -n '8p' < planet_mines_roads_deforestation_values )
-    SEG_minsize=$( sed -n '9p' < planet_mines_roads_deforestation_values )
-    SRM_minsize=$( sed -n '10p' < planet_mines_roads_deforestation_values )
+    MSS_spatialr=$( sed -n '3p' < planet_mines_roads_deforestation_values | cut -d"-" -f2 )
+    MSS_ranger=$( sed -n '4p' < planet_mines_roads_deforestation_values | cut -d"-" -f2 )
+    MSS_thres=$( sed -n '5p' < planet_mines_roads_deforestation_values | cut -d"-" -f2)
+    MSS_maxiter=$( sed -n '6p' < planet_mines_roads_deforestation_values | cut -d"-" -f2 )
+    SEG_spatialr=$( sed -n '7p' < planet_mines_roads_deforestation_values | cut -d"-" -f2 )
+    SEG_ranger=$( sed -n '8p' < planet_mines_roads_deforestation_values | cut -d"-" -f2 )
+    SEG_minsize=$( sed -n '9p' < planet_mines_roads_deforestation_values | cut -d"-" -f2)
+    SRM_minsize=$( sed -n '10p' < planet_mines_roads_deforestation_values | cut -d"-" -f2)
 else
     # If not an automated workflow and there is more than one image to process
     #   then ask user if they would like to preform LSMS with different vales
