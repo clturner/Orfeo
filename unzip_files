@@ -1,0 +1,155 @@
+#!/bin/bash
+
+DEBUG=$1
+OUTPUT_DIR=$2
+IMAGE_TYPE=$3
+PROCESS=$4
+PATH_TO_IMAGES=$5
+NUM_PATHS=$6
+WORKFLOW=$7
+
+PATH_TO_IMAGES=$( echo $PATH_TO_IMAGES | tr "%" " " )
+
+if [ $DEBUG = "d" ]; then
+    echo $OUTPUT_DIR
+    echo $IMAGE_TYPE
+    echo $PROCESS
+    echo $PATH_TO_IMAGES
+    echo $NUM_PATHS
+    echo $WORKFLOW
+    echo unzip start
+    read sjkdjcodsg
+fi
+
+# Unzip every .zip file in the PATH_TO_IMAGES variable
+for file in $PATH_TO_IMAGES;
+do
+    unzip $file -d $OUTPUT_DIR
+    # loop through ouput directory to find the README.txt file and remove it
+    #    to stop the program from asking if you would like to replace it
+    #    in the case you are unzipping many files
+    for my_file in `ls $OUTPUT_DIR`;
+    do
+	if [[ $my_file =~ "README.txt" ]]; then
+	    thefile=$OUTPUT_DIR/$my_file
+	    rm -f $thefile
+	fi
+    done
+done
+
+# Remove original .zip file after it is unzipped if using
+#    the same directory for output and input images
+if [[ $PATH_TO_IMAGES =~ $OUTPUT_DIR ]]; then
+    rm -r $PATH_TO_IMAGES
+fi
+
+# Create a space delimited list of unziped files in Output Directory
+unziped_folders=""
+mines_roads_deforestation_files=""
+for file in `ls $OUTPUT_DIR`;
+do
+    # Create a space delimited list of Directories created by unziping
+    if [[ ! $file =~ ".txt" ]]
+    then
+	unziped_folders+=" "$OUTPUT_DIR/$file 
+    fi
+    
+    # Create a space delimited list of files in all Directories 
+    # Display file list to user
+    if [[ -d $OUTPUT_DIR/$file ]];
+    then
+	clear
+	echo
+	echo THE DIRECTORY $file HAS THESE FILES IN IT
+	echo
+	for files in `ls $OUTPUT_DIR/$file`;
+	do
+	    # If unzip_files is not used in a workflow process list the files
+	    # If unzip is being used in a automated workflow create space dilimeted
+	    #    list of files to be used
+	    if [ $WORKFLOW -eq 11 ] || [ $WORKFLOW -eq 12 ] || [ $IMAGE_TYPE = "PLNT" ] && [[ $files =~ "SR.tif" ]];
+	    then
+		mines_roads_deforestation_files+=" "$OUTPUT_DIR/$file/$files
+	    else
+		if [ $IMAGE_TYPE = "SENT" ] && [ $files = "GRANULE" ]; then
+		    for gfiles in `ls $OUTPUT_DIR/$file/$files`; do
+			for sent_file in `ls $OUTPUT_DIR/$file/$files/$gfiles/IMG_DATA`; do
+			    echo -e '\t' $OUTPUT_DIR/$file/$files/$gfiles/IMG_DATA/$sent_file
+			done
+		    done
+		elif [ $IMAGE_TYPE != "SENT" ]; then
+		    echo -e '\t' $files
+		fi
+	    fi
+	done
+    # I file is not a folder list it to the user
+    else
+	echo -e '\t' $file
+    fi
+    echo Hi
+done
+
+# If executing an autmated workflow set files_to_keep to
+#    variable mines_roads_deforestation_files
+if [ $WORKFLOW -eq 11 ] || [ $WORKFLOW -eq 12 ] || [ $IMAGE_TYPE = "PLNT" ];
+then
+    files_to_keep=$mines_roads_deforestation_files
+else
+    # If unzip_files is not being used in an automated workflow
+    #    then ask user to list the files they would like to use
+    #    into the variable files_to_keep
+    echo
+    echo PLEASE LIST THE FILES THAT YOU WOULD LIKE TO WORK WITH
+    echo
+    echo ALL OTHER FILES WILL BE REMOVED FROM YOUR OUTPUT DIRECTORY
+    echo
+    read files_to_keep
+fi
+
+for fil in $files_to_keep; do
+    mv $fil $OUTPUT_DIR
+done
+
+if [ $IMAGE_TYPE = "SENT" ]; then
+    for file in `ls $OUTPUT_DIR`; do
+	if [ -d $OUTPUT_DIR/$file ]; then
+	    rm -rf $OUTPUT_DIR/$file
+	fi
+    done
+else
+# Loop through folders/files in Output directory
+    for file in `ls $OUTPUT_DIR`;
+    do
+    # If file in OUTPUT_DIR is a directory
+	if [ -d $OUTPUT_DIR/$file ]
+	then
+	# Loop through files in Directory
+	    for files in `ls $OUTPUT_DIR/$file`;
+	    do
+	    # If the file in Directory is listed in variable $files_to_keep
+	    #    then move the file into the OUTPUT_DIR
+		if [[ $files_to_keep != *$files* ]];
+		then
+		    rm -r $OUTPUT_DIR/$file/$files
+		else
+		    mv $OUTPUT_DIR/$file/$files $OUTPUT_DIR
+		fi
+	    done
+	# Remove the unzipped directory from OUTPUT_DIR once proper file 
+	#    in unzipped directory has been located and moved to OUTPUT_DIR
+	    rm -r $OUTPUT_DIR/$file
+#	    rm $OUTPUT_DIR/$file
+	fi
+    done
+fi
+    
+if [ $DEBUG = "d" ]; then
+    echo $OUTPUT_DIR
+    echo $IMAGE_TYPE
+    echo $PROCESS
+    echo $PATH_TO_IMAGES
+    echo $NUM_PATHS
+    echo $WORKFLOW
+    echo unzip_folders end
+    read sjkdjcodsgf
+fi
