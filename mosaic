@@ -36,7 +36,7 @@ read_files_to_user () {
 
 # If executing an automated workflow
 count=0
-if [[ $WORKFLOW -eq 11 ]] || [[ $WORKFLOW -eq 12 ]] || [ $IMAGE_TYPE = "PLNT" ]; then
+if [[ $WORKFLOW -eq 11 ]] || [[ $WORKFLOW -eq 12 ]] || [ $IMAGE_TYPE = "PLNT" ] || [ $IMAGE_TYPE = "PSAT" ]; then
     image_paths=""
     save_date=1
     # Loop through all the images

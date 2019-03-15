@@ -57,10 +57,13 @@ get_image_type () {
     echo "1. PERU SAT"
     echo "2. PLANET"
     echo "3. WORLDVIEW"
+    echo "4. GEOEYE"
+    echo "5. SENTINEL"
     echo
     echo "Choose and image type and press [ENTER]:"
     read IMAGE_TYPE
-    if [ "$IMAGE_TYPE" = 1 ] || [ "$IMAGE_TYPE" = 2 ] || [ "$IMAGE_TYPE" = 3 ]
+
+    if [ "$IMAGE_TYPE" = 1 ] || [ "$IMAGE_TYPE" = 2 ] || [ "$IMAGE_TYPE" = 3 ] || [ "$IMAGE_TYPE" = 4 ] || [ "$IMAGE_TYPE" = 5 ];
     then
 	IMAGE_TYPE=$IMAGE_TYPE
     else
@@ -71,15 +74,16 @@ get_image_type () {
     fi
 
     # Change image type to text for future file names
-    if [ "$IMAGE_TYPE" = 1 ]
-    then
+    if [ "$IMAGE_TYPE" = 1 ]; then
 	IMAGE_TYPE="PSAT"
-    elif [ "$IMAGE_TYPE" = 2 ]
-    then
+    elif [ "$IMAGE_TYPE" = 2 ]; then
 	IMAGE_TYPE="PLNT"
-    elif [ "$IMAGE_TYPE" = 3 ]
-    then
+    elif [ "$IMAGE_TYPE" = 3 ]; then
 	IMAGE_TYPE="WVIW"
+    elif [ "$IMAGE_TYPE" = 4 ]; then
+	IMAGE_TYPE="GEYE"
+    elif [ "$IMAGE_TYPE" = 5 ]; then
+	IMAGE_TYPE="SENT"
     fi
     clear
 }
@@ -102,10 +106,11 @@ echo " 7. MOSAIC"
 echo " 8. EXTRACT ROI (REGION OF INTEREST)"
 echo " 9. UNZIP FILES"
 echo "10. CLOUD DETECTOR"
-echo "11. PLANET: MINES ROADS & DEFORESTATION WORKFLOW"
-echo "12. PLANET: MINES ROADS & DEFORESTATION ROI WORKFLOW"
+echo "11. MINES ROADS & DEFORESTATION WORKFLOW"
+echo "12. MINES ROADS & DEFORESTATION ROI WORKFLOW"
 echo
 read PROCESS
+
 # If user presses enter without gioving a process
 if [ -z $PROCESS ];
 then
@@ -179,11 +184,11 @@ if [[ -d $PATH_TO_IMAGES ]]; then
     INPUT_DIR=$PATH_TO_IMAGES
     for file in `ls $PATH_TO_IMAGES`;
     do
-        if [[ $file == *.tif* && $file != *tif.xml ]];
-        then
+        if [[ $file == *.tif* && $file != *tif.xml ]]; then
             file_string="$file_string $PATH_TO_IMAGES/$file"
-	elif  [[ $file == *.zip* && $PROCESS -eq 11 || $PROCESS -eq 12 ]] || [[ $PROCESS =~ 9 ]];
-	then
+	elif [[ $file == *.jp2* ]]; then
+	    file_string="$file_string $PATH_TO_IMAGES/$file"
+	elif  [[ $file == *.zip* && $PROCESS -eq 11 || $PROCESS -eq 12 ]] || [[ $PROCESS =~ 9 ]]; then
 	    file_string="$file_string $PATH_TO_IMAGES/$file"
         fi
     done

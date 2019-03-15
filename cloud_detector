@@ -41,10 +41,14 @@ do
 	 -out $OUTPUT_DIR/$filename-CLD-BANDS.tif
     
     # Expression string for cloud detection 
-    exp_string='(im1b1>1500)&&(im1b2>1400)&&(im1b3>1500)&&(im1b4>2000)&&(im1b5>-888)&&(im1b5<-30)&&(im1b6<0.0006)?256:0'
+    exp_string1='(im1b1>1500)&&(im1b2>1400)&&(im1b3>1500)&&(im1b4>2000)&&(im1b5>-888)&&(im1b5<-30)&&(im1b6<0.0006)?256:0'
+    exp_string2='(im1b1>3400)&&(im1b2>2700)&&(im1b3>3350)&&(im1b4>3900)?256:0'
+    exp_string3='(im1b1<975)&&(im1b2<1000)&&(im1b3<1000)&&(im1b4<2300)?256:0'
 
     # Create a single band image to mask clouds, shadows
-    otbcli_BandMath -il $OUTPUT_DIR/$filename-CLD-BANDS.tif -out $OUTPUT_DIR/$filename-clouds.tif -exp $exp_string
+    otbcli_BandMath -il $OUTPUT_DIR/$filename-CLD-BANDS.tif -out $OUTPUT_DIR/$filename-exp1-clouds.tif -exp $exp_string1
+    otbcli_BandMath -il $file -out $OUTPUT_DIR/$filename-exp2-clouds.tif -exp $exp_string2
+    otbcli_BandMath -il $file -out $OUTPUT_DIR/$filename-exp3-clouds.tif -exp $exp_string3
 done
 
 rm $OUTPUT_DIR/$filename-CLD-BANDS.tif $OUTPUT_DIR/radios.tif

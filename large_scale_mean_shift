@@ -56,14 +56,23 @@ get_flag_values () {
 #    text file
 if [ $WORKFLOW -eq 11 ] || [ $WORKFLOW -eq 12 ];
 then
-    MSS_spatialr=$( sed -n '3p' < planet_mines_roads_deforestation_values | cut -d"-" -f2 )
-    MSS_ranger=$( sed -n '4p' < planet_mines_roads_deforestation_values | cut -d"-" -f2 )
-    MSS_thres=$( sed -n '5p' < planet_mines_roads_deforestation_values | cut -d"-" -f2)
-    MSS_maxiter=$( sed -n '6p' < planet_mines_roads_deforestation_values | cut -d"-" -f2 )
-    SEG_spatialr=$( sed -n '7p' < planet_mines_roads_deforestation_values | cut -d"-" -f2 )
-    SEG_ranger=$( sed -n '8p' < planet_mines_roads_deforestation_values | cut -d"-" -f2 )
-    SEG_minsize=$( sed -n '9p' < planet_mines_roads_deforestation_values | cut -d"-" -f2)
-    SRM_minsize=$( sed -n '10p' < planet_mines_roads_deforestation_values | cut -d"-" -f2)
+    if [ $IMAGE_TYPE = "PLNT" ]; then
+	file_prefix="planet"
+    elif [ $IMAGE_TYPE = "PSAT" ]; then
+	file_prefix="psat"
+    elif [ $IMAGE_TYPE = "WVIW" ]; then
+	file_prefix="wview"
+    fi
+    MSS_spatialr=$( sed -n '3p' < $file_prefix-mines_roads_deforestation_values | cut -d"-" -f2 )
+    MSS_ranger=$( sed -n '4p' < $file_prefix-mines_roads_deforestation_values | cut -d"-" -f2 )
+    MSS_thres=$( sed -n '5p' < $file_prefix-mines_roads_deforestation_values | cut -d"-" -f2)
+    MSS_maxiter=$( sed -n '6p' < $file_prefix-mines_roads_deforestation_values | cut -d"-" -f2 )
+    SEG_spatialr=$( sed -n '7p' < $file_prefix-mines_roads_deforestation_values | cut -d"-" -f2 )
+    SEG_ranger=$( sed -n '8p' < $file_prefix-mines_roads_deforestation_values | cut -d"-" -f2 )
+    SEG_minsize=$( sed -n '9p' < $file_prefix-mines_roads_deforestation_values | cut -d"-" -f2)
+    SRM_minsize=$( sed -n '10p' < $file_prefix-mines_roads_deforestation_values | cut -d"-" -f2)
+    attr_column=$( sed -n '11p' < $file_prefix-mines_roads_deforestation_values | cut -d"-" -f2)
+    threshhold=$( sed -n '12p' < $file_prefix-mines_roads_deforestation_values | cut -d"-" -f2)
 else
     # If not an automated workflow and there is more than one image to process
     #   then ask user if they would like to preform LSMS with different vales
@@ -133,7 +142,8 @@ do
     # If performing and automated workflow get the attribute column to rasterize
     #    from the planet_mines_roads_deforestation_values text file
     if [ $WORKFLOW -eq 11 ] || [ $WORKFLOW -eq 12 ]; then
-	attr_column=$( sed -n '11p' < planet_mines_roads_deforestation_values | cut -d"-" -f2 )
+#	attr_column=$( sed -n '11p' < planet_mines_roads_deforestation_values | cut -d"-" -f2 )
+	attr_column=$attr_column
     else
 	# If not an automated workflow than request the attribute column to rasterize
         #    by from the user
@@ -153,14 +163,19 @@ do
 	-spy 0.7 \
 	-out $OUTPUT_DIR/$output_folder/$filename_raster
 
+    if [ $WORKFLOW -eq 11 ] || [ $WORKFLOW -eq 12 ]; then
+#	threshhold=$( sed -n '12p' < planet_mines_roads_deforestation_values | cut -d"-" -f2)
+	threshhold=$threshhold
+    else
+	echo ENTER A THRESHHOLD VALUE
+	echo
+	echo example 212
+	echo
+	read threshhold
+    fi
+    exp_string="im1b1>$threshhold?256:0"
 
-#    echo ENTER A THRESHHOLD VALUE
-#    echo example 212
-#    read threshhold
-#    exp_string="im1b1>$threshhold?1:254"
-
-#    otbcli_BandMath -il $OUTPUT_DIR/$output_folder/$filename_raster -out $OUTPUT_DIR/$output_folder/$filename_binary -exp $exp_string
-
+    otbcli_BandMath -il $OUTPUT_DIR/$output_folder/$filename_raster -out $OUTPUT_DIR/$output_folder/$filename_binary -exp $exp_string
 done
 
 # Only remove original files if they are in the output directory

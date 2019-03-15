@@ -28,7 +28,13 @@ then
     # Do not add different values to each file
     # Retrive the automated values from text file: planet_mines_roads_deforestation_values
     add_diff_indices="N"
-    full_indices_list=$( sed -n '1p' < planet_mines_roads_deforestation_values )
+    if [ $IMAGE_TYPE = "PLNT" ]; then
+	full_indices_list=$( sed -n '1p' < planet-mines_roads_deforestation_values )
+    elif [ $IMAGE_TYPE = "PSAT" ]; then
+	full_indices_list=$( sed -n '1p' < psat-mines_roads_deforestation_values )
+    elif [ $IMAGE_TYPE = "WVIW" ]; then
+	full_indices_list=$( sed -n '1p' < wview-mines_roads_deforestation_values )
+    fi
     full_indices_list=$( echo $full_indices_list | cut -d"-" -f2 )
 else
     # Choose if you want to add different radiometric indices to each file
@@ -107,11 +113,14 @@ do
     done
 
     # Create Radiometric Indices band or bands
+    if [ $IMAGE_TYPE != "WVIW" ]; then
+	NIR_channel="-channels.nir 4"
+    fi
     otbcli_RadiometricIndices -in $file -list $full_indices_list \
         -channels.blue 1 \
         -channels.green 2 \
         -channels.red 3 \
-        -channels.nir 4 \
+        $NIR_channel \
         -out $OUTPUT_DIR/radio.tif
 
     # Concatonate the new bands to the original file

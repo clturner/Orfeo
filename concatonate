@@ -32,9 +32,10 @@ do
     filename=$( echo $file |rev | cut -d"/" -f1 | rev )
     filename=$( echo $filename | rev | cut -d"." -f2 | rev )
     # Only collect filenames that end in .tif and discard tif.xml files
-    if [[ $file =~ ".tif" && ${file} != *"tif."* ]];
+    if [[ $file =~ ".tif" && ${file} != *"tif."* || $file =~ ".jp2" ]];
     then
 	file_string="$file_string $file"
+	echo file string is $file_string
     fi
 done
 

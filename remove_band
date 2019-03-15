@@ -25,7 +25,14 @@ fi
 #    planet_mines_roads_deforestation_values text file
 if [ $WORKFLOW -eq 11 ] || [ $WORKFLOW -eq 12 ]
 then
-    bands_to_remove=$( sed -n '2p' < planet_mines_roads_deforestation_values )
+    remove_diff_bands="N"
+    if [ $IMAGE_TYPE = "PLNT" ]; then
+	bands_to_remove=$( sed -n '2p' < planet-mines_roads_deforestation_values )
+    elif [ $IMAGE_TYPE = "PSAT" ]; then
+	bands_to_remove=$( sed -n '2p' < psat-mines_roads_deforestation_values )
+    elif [ $IMAGE_TYPE = "WVIW" ]; then
+	 bands_to_remove=$( sed -n '2p' < wview-mines_roads_deforestation_values )
+    fi
     bands_to_remove=$( echo $bands_to_remove | cut -d"-" -f2 )
 else
     # If its not and automated workflow and there are more than one image to process

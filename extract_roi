@@ -24,18 +24,23 @@ fi
 
 # For automated workflows parse $PATH to create absolute path to
 #     all vector files for regions of interest
-if [ $WORKFLOW -eq 11 ] || [ $WORKFLOW -eq 12 ];
-then
+if [ $WORKFLOW -eq 11 ] || [ $WORKFLOW -eq 12 ]; then
     # Create space delimited list of all paths in $PATH
     all_paths=$( echo $PATH | tr ":" " " | grep "orfeo" )
     # Loop through all the paths in $PATH to create the absolute path
     #     to the directory of shapefiles for regions of interest
+    shapefile_list=""
     for path in $all_paths;
     do
 	# Find the OTB directory in $PATH
-	if [[ $path =~ "OTB" ]] && [[ ! $path =~ "bin" ]] ;
-	then
+	if [[ $path =~ "OTB" ]] && [[ ! $path =~ "bin" ]]; then
 	    # Create absolute path to shapefiles of ROI
+	    for shapefile in `ls $path/shapefiles`; do
+      		if [[ $shapefile =~ ".shp" ]]; then
+		    echo shapefile is at  $path/$shapefile
+		    shapefile_list="$shapefile_list $path/shapefiles/$shapefile"    
+		fi
+	    done
 	    reference_vector=$path/shapefiles/PLNT_mining_ROI_1.shp
 	    break
 	fi
@@ -53,12 +58,21 @@ fi
 roi_filename=$( echo $reference_vector | rev | cut -d"/" -f1 | rev )
 roi_filename=$( echo $roi_filename | rev | cut -d"." -f2 | rev )
 
-for file in $PATH_TO_IMAGES;
-do
+for file in $PATH_TO_IMAGES; do
     # Get the filename without extension
     filename=$( echo $file | rev | cut -d"/" -f1 | rev )
     filename=$( echo $filename | rev | cut -d"." -f2 | rev )
-    otbcli_ExtractROI -ram 15000 -in $file -mode fit -mode.fit.vect $reference_vector -out $OUTPUT_DIR/$filename-$roi_filename.tif
+    if [ $WORKFLOW -eq 11 ] || [ $WORKFLOW -eq 12 ]; then
+	for shapefile in $shapefile_list; do
+	    roi_filename=$( echo $shapefile | rev | cut -d"/" -f1 | rev )
+	    roi_filename=$( echo $roi_filename | rev | cut -d"." -f2 | rev )
+	    otbcli_ExtractROI -ram 15000 -in $file -mode fit -mode.fit.vect $shapefile -out $OUTPUT_DIR/$filename-$roi_filename.tif
+	done
+    else
+	roi_filename=$( echo $reference_vector | rev | cut -d"/" -f1 | rev )
+	roi_filename=$( echo $roi_filename | rev | cut -d"." -f2 | rev )
+	otbcli_ExtractROI -ram 15000 -in $file -mode fit -mode.fit.vect $reference_vector -out $OUTPUT_DIR/$filename-$roi_filename.tif
+    fi
 done
 
 # If the orginal files are not in the output directory than do not remove them

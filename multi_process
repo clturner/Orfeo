@@ -38,12 +38,14 @@ get_file_names () {
     fi
     new_PATH_TO_IMAGES=""
     for file in `ls -l $file_dir`;
-    do
+    do	
 	if [ $num -eq 9 ] && [[ $file  =~ ".zip" ]];
 	then
 	    new_PATH_TO_IMAGES="$new_PATH_TO_IMAGES $file_dir/$file"
 	elif [[ $file =~ ".tif" && ${file} != *"tif."* ]];
         then
+	    new_PATH_TO_IMAGES="$new_PATH_TO_IMAGES $file_dir/$file"
+	elif [[ $file =~ ".jp2" ]]; then
 	    new_PATH_TO_IMAGES="$new_PATH_TO_IMAGES $file_dir/$file"
 	fi
     done
@@ -60,12 +62,25 @@ done
 # Set process string values to the corresponding automated workflow
 if [ "$count" -eq 1 ] && [ "$PROCESS" -eq 11 ] # Then this is a workflow without ROI extraction
 then
-    WORKFLOW=11
-    PROCESS="9 7 1 4 6"
+    if [ $IMAGE_TYPE = "PSAT" ]; then
+	WORKFLOW=11
+	PROCESS="7 1 4 6"
+    elif [ $IMAGE_TYPE = "WVIW" ]; then
+	WORKFLOW=11
+        PROCESS="7 6"
+    elif [ $IMAGE_TYPE = "PLNT" ]; then
+	WORKFLOW=11
+	PROCESS="9 7 1 4 6"
+    fi
 elif [ "$count" -eq 1 ] && [ "$PROCESS" -eq 12 ]
 then
-    WORKFLOW=12 # Then this is a workflow with ROI extraction
-    PROCESS="9 7 8 1 4 6"
+    if [ $IMAGE_TYPE = "PSAT" ] || [ $IMAGE_TYPE = "WVIW" ]; then
+	WORKFLOW=12 # Then this is a workflow with ROI extraction
+	PROCESS="7 8 1 4 6"
+    elif [ $IMAGE_TYPE = "PLNT" ]; then
+	WORKFLOW=12
+	PROCESS="9 7 8 1 4 6"
+    fi
 else
     PROCESS=$PROCESS
 fi
