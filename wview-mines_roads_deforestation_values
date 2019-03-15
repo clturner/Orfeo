@@ -1,0 +1,12 @@
+RadiometricIndices-Soil:RI
+BandsToRemove-1
+MSS_spatialr-8
+MSS_ranger-15
+MSS_thres-.4
+MSS_maxiter-40
+SEG_spatialr-4
+SEG_ranger-9
+SEG_minsize-0
+SRM_minsize-20
+attr_column-meanB0
+threshhold-111

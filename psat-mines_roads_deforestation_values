@@ -1,0 +1,12 @@
+RadiometricIndices-Vegetation:NDVI Soil:RI
+BandsToRemove-1
+MSS_spatialr-4
+MSS_ranger-8
+MSS_thres-.1
+MSS_maxiter-40
+SEG_spatialr-20
+SEG_ranger-30
+SEG_minsize-0
+SRM_minsize-50
+attr_column-meanB0
+threshhold-380
