@@ -25,7 +25,7 @@ $ geomundo
 - Example results: a small scale logging segmentation using automated workflow script
 - where valuse for parameters are taken from the proper text file.
 
-<img src="https://github.com/clturner/Orfeo/blob/master/images/LoggingDetection.png" title="logging Detection" alt="logging Detection"
+<img src="https://github.com/clturner/Orfeo/blob/master/images/LoggingDetection.png" title="logging Detection" alt="logging Detection">
 
 ## Built With
 
