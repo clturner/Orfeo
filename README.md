@@ -1,4 +1,4 @@
-<a href="https://www.amazonconservation.org"><img src="https://docs.google.com/presentation/d/1KMBn7uZqZQy5G_sfLcb-yHxLcWo-zdyOkIa8I1G98m0/edit?usp=sharing" title="Geomundo" alt="Geomundo"></a>
+<a href="https://www.amazonconservation.org"><img src="https://drive.google.com/file/d/1oNBkP8o_JpvUUXbqFJKg1eXI1XRD3cgQ/view?usp=sharing" title="Geomundo" alt="Geomundo"></a>
 
 <!-- [![FVCproductions](https://avatars1.githubusercontent.com/u/4284691?v=3&s=200)](http://fvcproductions.com) -->
 
