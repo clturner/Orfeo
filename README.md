@@ -21,9 +21,8 @@ Geomundo is built with Orfeotoolbox and Bash as a batch manipulation for satelli
 ```
 $ geomundo
 ```
-### Results
-- Example results: a small scale logging segmentation using automated workflow script
-- where valuse for parameters are taken from the proper text file.
+## Results
+- Example results: a small scale logging segmentation using automated workflow script where valuse for parameters are taken from the proper text file.
 
 <img src="https://github.com/clturner/Orfeo/blob/master/images/LoggingDetection.png" title="logging Detection" alt="logging Detection">
 
