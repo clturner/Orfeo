@@ -1,5 +1,5 @@
 # Geomundo
-> Identifying Amazon threats using automated detection for HR/VHR imagery in the Peruvian Amazon
+> Identifying Amazon threats using automated detection for HR/VHR imagery in the Peruvian Amazon.
 
 > Remote Sensing, Image Classification, Orfeo, Orfeo Toolbbox, Bash
 
