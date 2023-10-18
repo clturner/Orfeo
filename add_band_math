@@ -1,28 +1,30 @@
 #!/bin/bash
+source helper_functions
 
 DEBUG=$1
 OUTPUT_DIR=$2
-IMAGE_TYPE=$3
-PROCESS=$4
-PATH_TO_IMAGES=$5
-NUM_PATHS=$6
-WORKFLOW=$7
+INPUT_DIR=$3
+IMAGE_TYPE=$4
+PROCESS=$5
+PATH_TO_IMAGES=$6
+NUM_PATHS=$7
+WORKFLOW=$8
+BAND_PAN=$9
+BAND_BLUE=$10
+BAND_GREEN=$11
+BAND_RED=$12
+BAND_NIR=$13
+BAND_CA=$14
+BAND_RE=$15
+BAND_SWIR=$16
 
 PATH_TO_IMAGES=$( echo $PATH_TO_IMAGES | tr "%" " ")
 
 if [ $DEBUG = "d" ]; then
-    echo $OUTPUT_DIR
-    echo $IMAGE_TYPE
-    echo $PROCESS
-    echo $PATH_TO_IMAGES
-    echo $NUM_PATHS
-    echo $WORKFLOW
-    echo add band math start values
-    read sodcosh
+    get_debug "add band math start values"
 fi
 
 # Loop to print image names and number of bands in image for user
-clear
 count=0
 for file in $PATH_TO_IMAGES;
 do
@@ -35,9 +37,9 @@ done
 # If more than one image to process ask
 if [ $NUM_PATHS -gt 1 ]; then
     echo
-    echo WOULD YOU LIKE ADD A DIFFERENT EXPERESSION STRING FOR EVERY IMAGE?
+    echo Would you like to add a different expression string for every image??
     echo
-    echo TYPE Y OR N
+    echo Type Y or N
     echo
     read add_diff_exp
 else
@@ -53,7 +55,7 @@ else
     # If adding the same band math expression to every image then store
     #    the expression string in the variable, expression
     echo
-    echo GIVE ME YOUR EXPRESSION STRING TO ADD TO EVERY FILE
+    echo Give me your expression string to add to every file.
     echo
     echo EXAMPLE: im1b1+im1b2
     echo
@@ -72,13 +74,14 @@ do
     if [ $add_diff_exp = "Y" ];
     then
 	echo
-	echo FOR FILE:
+	echo "FOR FILE:"
 	echo $full_filename
 	echo
-	echo GIVE ME YOUR EXPRESSION STRING
+	echo "Give me your expression string."
 	echo
-	echo EXAMPLE: im1b1+im1b2
-	echo
+	echo "EXAMPLE: im1b1+im1b2"
+	echo "EXAMPLE: cos(im1b1)>cos(im2b1)?im3b1:im3b2"
+    echo
 	read expression
     fi
 
@@ -92,19 +95,12 @@ do
 
 done
 
-# If original images are not stored in the output directory the do not remove
+# If original images are not stored in the output directory then do not remove
 #    the images on complettion 
 if [[ $PATH_TO_IMAGES =~ $OUTPUT_DIR ]]; then
     rm $PATH_TO_IMAGES
 fi
 
 if [ $DEBUG = "d" ]; then
-    echo $OUTPUT_DIR
-    echo $IMAGE_TYPE
-    echo $PROCESS
-    echo $PATH_TO_IMAGES
-    echo $NUM_PATHS
-    echo $WORKFLOW
-    echo add band math end values
-    read sodcosh
+    get_debug "add band math end values"
 fi

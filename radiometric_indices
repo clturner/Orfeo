@@ -1,26 +1,76 @@
 #!/bin/bash
+source helper_functions
 
 DEBUG=$1
 OUTPUT_DIR=$2
-IMAGE_TYPE=$3
-PROCESS=$4
-PATH_TO_IMAGES=$5
-NUM_PATHS=$6
-WORKFLOW=$7
-#DATE=`date '+%Y-%m-%d_%H-%M'`
+INPUT_DIR=$3
+IMAGE_TYPE=$4
+PROCESS=$5
+PATH_TO_IMAGES=$6
+NUM_PATHS=$7
+WORKFLOW=$8
+BAND_PAN=$9
+BAND_BLUE=$10
+BAND_GREEN=$11
+BAND_RED=$12
+BAND_NIR=$13
+BAND_CA=$14
+BAND_RE=$15
+BAND_SWIR=$16
 
 PATH_TO_IMAGES=$( echo $PATH_TO_IMAGES | tr % " ")
 
 if [ $DEBUG = "d" ]; then
-    echo $OUTPUT_DIR
-    echo $IMAGE_TYPE
-    echo $PROCESS
-    echo $PATH_TO_IMAGES
-    echo $NUM_PATHS
-    echo $WORKFLOW
-    echo radiometric start values
-    read dsjdsjsk
+    get_debug "Starting radiometric indices"
 fi
+
+full_indices_list=""
+function get_indice () {
+    # Choose the radiometric Indices to add to each file
+    full_indices_list=""
+    echo
+    echo Choose your Radiometric Indice:
+    echo "1. Vegetation:NDVI    7. Vegetation:MSAVI2             13. Water:NDWI   19.Soil:BI"
+    echo "2. Vegetation:TNDVI   8. Vegetation:GEMI               14. Water:NDWI2  20.Soil:BI2"
+    echo "3. Vegetation:RVI     9. Vegetation:IPVI               15. Water:MNDWI  21.BuiltUp:ISU"
+    echo "4. Vegetation:SAVI   10. Vegetation:LAIFromNDVILog     16. Water:NDTI"
+    echo "5. Vegetation:TSAVI  11. Vegetation:LAIFromReflLinear  17. Soil:RI"
+    echo "6. Vegetation:MSAVI  12. Vegetation:LAIFromNDVIFormo   18. Soil:CI"
+    echo
+    echo EXAMPLE: 1 12 20
+    echo
+    read index_numbers
+    for num in $index_numbers; do
+	case $num in
+	    1) full_indices_list+="Vegetation:NDVI ";;
+	    2) full_indices_list+="Vegetation:TNDVI ";;
+	    3) full_indices_list+="Vegetation:RVI ";;
+	    4) full_indices_list+="Vegetation:SAVI ";;
+	    5) full_indices_list+="Vegetation:TSAVI ";;
+	    6) full_indices_list+="Vegetation:MSAVI ";;
+	    7) full_indices_list+="Vegetation:MSAVI2 ";;
+	    8) full_indices_list+="Vegetation:GEMI ";;
+	    9) full_indices_list+="Vegetation:IPVI ";;
+	    10) full_indices_list+="Vegetation:LAIFromNDVILog ";;
+	    11) full_indices_list+="Vegetation:LAIFromReflLinear ";;
+	    12) full_indices_list+="Vegetation:LAIFromNDVIFormo ";;
+	    13) full_indices_list+="Water:NDWI ";;
+	    14) full_indices_list+="Water:NDWI2 ";;
+	    15) full_indices_list+="Water:MNDWI ";;
+	    16) full_indices_list+="Water:NDTI ";;
+	    17) full_indices_list+="Soil:RI ";;
+	    18) full_indices_list+="Soil:CI ";;
+	    19) full_indices_list+="Soil:BI ";;
+	    20) full_indices_list+="Soil:BI2 ";;
+	    21) full_indices_list+="BuiltUp:ISU ";;
+	    *)
+		echo $num " is not a choice in the list [press enter]"
+		read
+		get_indice
+		;;
+	esac
+    done
+}
 
 if [ $WORKFLOW -eq 11 ] || [ $WORKFLOW -eq 12 ];
 then
@@ -39,10 +89,10 @@ then
 else
     # Choose if you want to add different radiometric indices to each file
     if [ $NUM_PATHS -gt 1 ]; then
-	clear
-	echo WOULD YOU LIKE TO ADD A DIFFERENT RADIOMETRIC INDICE TO EACH FILE?
 	echo
-	echo TYPE Y OR N
+	echo Would you like to add a different radiometric index to each file?
+	echo
+	echo Type Y or N
 	echo
 	read add_diff_indices
     else
@@ -51,22 +101,12 @@ else
 
     if [ $add_diff_indices = "Y" ] || [ $add_diff_indices = "y" ]
     then
-	echo WE WILL ADD RADIOMETRIC INDICES FOR EACH FILE AS WE GO
+	echo
+	echo We will add radiometric indices for each file as we go.
+	echo
     else
 	# Choose the radiometric Indices to add to each file
-	echo CHOOSE YOUR RADIMETRIC INDICES
-        echo "1. Vegetation:NDVI    7. Vegetation:MSAVI2 13. Water:NDPI"
-        echo "2. Vegetation:TNDVI   8. Vegetation:GEMI   14. Water:NDTI"
-        echo "3. Vegetation:RVI     9. Vegetation:IPVI   15. Soil:RI"
-        echo "4. Vegetation:SAVI   10. Water:NDWI        16. Soil:CI"
-        echo "5. Vegetation:TSAVI  11. Water:NDWI2       17. Soil:BI"
-        echo "6. Vegetation:MSAVI  12. Water:MNDWI       18. Soil:BI2"
-	echo
-	echo PLEASE CHOOSE RADIOMETRIC INDICE/INDICES TO ADD TO ALL FILES
-	echo
-	echo EXAMPLE: Vegetation:NDVI Vegetation:MSAVI2
-	echo
-	read full_indices_list
+	get_indice
     fi
 fi
 
@@ -86,22 +126,7 @@ do
     #    each time you loop
     if [ $add_diff_indices = "Y" ] || [  $add_diff_indices = "y" ]
     then
-	    clear
-	    echo CHOOSE YOUR RADIMETRIC INDICES
-	    echo "1. Vegetation:NDVI    7. Vegetation:MSAVI2 13. Water:NDPI"
-	    echo "2. Vegetation:TNDVI   8. Vegetation:GEMI   14. Water:NDTI"
-	    echo "3. Vegetation:RVI     9. Vegetation:IPVI   15. Soil:RI"
-	    echo "4. Vegetation:SAVI   10. Water:NDWI        16. Soil:CI"
-	    echo "5. Vegetation:TSAVI  11. Water:NDWI2       17. Soil:BI"
-	    echo "6. Vegetation:MSAVI  12. Water:MNDWI       18. Soil:BI2"
-	    echo
-	    echo FOR FILE: $full_filename
-	    echo
-	    echo PLEASE CHOOSE THE RADIOMETRIC INDICE/INDICES YOU WOULD LIKE TO ADD
-	    echo
-	    echo EXAMPLE: Vegetation:NDVI Vegetation:MSAVI2
-	    echo
-	    read full_indices_list
+	get_indice
     fi
 
     # Create filename extension from all radiometric indices for this loop
@@ -112,16 +137,13 @@ do
 	filename_addition+="_"$indice
     done
 
-    # Create Radiometric Indices band or bands
-    if [ $IMAGE_TYPE != "WVIW" ]; then
-	NIR_channel="-channels.nir 4"
-    fi
+    
     otbcli_RadiometricIndices -in $file -list $full_indices_list \
-        -channels.blue 1 \
-        -channels.green 2 \
-        -channels.red 3 \
-        $NIR_channel \
-        -out $OUTPUT_DIR/radio.tif
+			      -channels.blue $BAND_BLUE \
+			      -channels.green $BAND_GREEN \
+			      -channels.red $BAND_RED \
+			      -channels.nir $BAND_NIR \
+			      -out $OUTPUT_DIR/radio.tif
 
     # Concatonate the new bands to the original file
     otbcli_ConcatenateImages -il \
@@ -139,12 +161,5 @@ if [[ $PATH_TO_IMAGES =~ $OUTPUT_DIR ]]; then
 fi
 
 if [ $DEBUG = "d" ]; then
-    echo $OUTPUT_DIR
-    echo $IMAGE_TYPE
-    echo $PROCESS
-    echo $PATH_TO_IMAGES
-    echo $NUM_PATHS
-    echo $WORKFLOW
-    echo radiometric end values
-    read sjkdjcodsg
+    get_debug "end radiometric Indices"
 fi

@@ -1,4 +1,5 @@
 #!/bin/bash
+source helper_functions
 
 DEBUG=$1
 OUTPUT_DIR=$2
@@ -8,20 +9,20 @@ PROCESS=$5
 PATH_TO_IMAGES=$6
 NUM_PATHS=$7
 WORKFLOW=$8
+BAND_PAN=$9
+BAND_BLUE=$10
+BAND_GREEN=$11
+BAND_RED=$12
+BAND_NIR=$13
+BAND_CA=$14
+BAND_RE=$15
+BAND_SWIR=$16
 
 PROCESS=$( echo $PROCESS | tr "%" " " )
+PATH_TO_IMAGES=$( echo $PATH_TO_IMAGES | tr "%" " " )
 
 if [ $DEBUG = "d" ]; then
-    echo $DEBUG
-    echo $OUTPUT_DIR
-    echo $INPUT_DIR
-    echo $IMAGE_TYPE
-    echo $PROCESS
-    echo $PATH_TO_IMAGES
-    echo $NUM_PATHS
-    echo $WORKFLOW
-    echo multi process start values
-    read sjkdjcodsg
+    get_debug "starting multiprocess"
 fi
 
 get_num_paths () {
@@ -31,24 +32,39 @@ get_num_paths () {
 }
 
 get_file_names () {
-    if [ $count -eq 1 ]; then
-	file_dir=$INPUT_DIR
+    if [ ! -d "$INPUT_DIR" ] && [ "$2" = 1 ]; then
+	directory_or_paths=$PATH_TO_IMAGES
     else
-	file_dir=$OUTPUT_DIR
+	if [ -d "$INPUT_DIR" ] && [ $2 = 1 ]; then
+	    directory_or_paths=$(cd "$INPUT_DIR" && pwd)
+	elif [ $2 > 1 ]; then
+	    directory_or_paths=$(find "$OUTPUT_DIR" -maxdepth 1 -type d)
+	else
+	    echo "Soemthing went very wrong...Sorry"
+	fi
     fi
     new_PATH_TO_IMAGES=""
-    for file in `ls -l $file_dir`;
-    do	
-	if [ $num -eq 9 ] && [[ $file  =~ ".zip" ]];
-	then
-	    new_PATH_TO_IMAGES="$new_PATH_TO_IMAGES $file_dir/$file"
-	elif [[ $file =~ ".tif" && ${file} != *"tif."* ]];
-        then
-	    new_PATH_TO_IMAGES="$new_PATH_TO_IMAGES $file_dir/$file"
-	elif [[ $file =~ ".jp2" ]]; then
-	    new_PATH_TO_IMAGES="$new_PATH_TO_IMAGES $file_dir/$file"
-	fi
-    done
+    if [ -d "$directory_or_paths" ]; then
+	for file in "$directory_or_paths"/*; do
+	    if [ $num -eq 9 ] && [[ $file  =~ ".zip" ]]; then
+		new_PATH_TO_IMAGES="$new_PATH_TO_IMAGES $file_dir$file"
+            elif [[ $file =~ ".tif" && ${file} != *"tif."* ]]; then
+		new_PATH_TO_IMAGES="$new_PATH_TO_IMAGES $file_dir$file"
+            elif [[ $file =~ ".jp2" ]]; then
+		new_PATH_TO_IMAGES="$new_PATH_TO_IMAGES $file_dir$file"
+            fi
+	done
+    else
+	for file in $directory_or_paths; do
+	    if [ $num -eq 9 ] && [[ $file  =~ ".zip" ]]; then
+	    	new_PATH_TO_IMAGES="$new_PATH_TO_IMAGES $file_dir$file"
+            elif [[ $file =~ ".tif" && ${file} != *"tif."* ]]; then
+            	new_PATH_TO_IMAGES="$new_PATH_TO_IMAGES $file_dir$file"
+            elif [[ $file =~ ".jp2" ]]; then
+            	new_PATH_TO_IMAGES="$new_PATH_TO_IMAGES $file_dir$file"
+            fi
+	done
+    fi
     PATH_TO_IMAGES=$( echo $new_PATH_TO_IMAGES | tr " " "%" )
 }
 
@@ -92,192 +108,99 @@ do
     if [ "$num" = 1 ]
     then
 	PROCESS=$( echo $PROCESS | tr " " "%" )
-	get_file_names $OUTPUT_DIR $num
+	get_file_names $OUTPUT_DIR $count
 	get_num_paths $PATH_TO_IMAGES 
 	PATH_TO_IMAGES=$( echo $new_PATH_TO_IMAGES | tr " " "%" )
-
-	if [ $DEBUG = "d" ]; then
-	    echo ! Doing radiometric indices $num in $PROCESS
-	    echo $OUTPUT_DIR
-            echo $IMAGE_TYPE
-            echo $PROCESS
-            echo $PATH_TO_IMAGES
-            echo $NUM_PATHS
-            echo $WORKFLOW
-            echo multipro radiometric num loop
-            read sodcosh
-	fi
-	radiometric_indices $DEBUG $OUTPUT_DIR $IMAGE_TYPE $PROCESS $PATH_TO_IMAGES $NUM_PATHS $WORKFLOW
-    elif [ "$num" = 2 ]
-    then
+	./radiometric_indices "$DEBUG" "$OUTPUT_DIR" "$INPUT_DIR" "$IMAGE_TYPE" "$PROCESS" "$PATH_TO_IMAGES" "$NUM_PATHS" "$WORKFLOW" "$BAND_PAN" "$BAND_BLUE" "$BAND_GREEN" "$BAND_RED" "$BAND_NIR" "$BAND_CA" "$BAND_RE" "$BAND_SWIR"
+    elif [ "$num" = 2 ]; then
 	PROCESS=$( echo $PROCESS | tr " " "%" )
-	get_file_names $OUTPUT_DIR $INPUT_DIR $num $count
+	get_file_names $OUTPUT_DIR $count
 	get_num_paths $PATH_TO_IMAGES
 	PATH_TO_IMAGES=$( echo $new_PATH_TO_IMAGES | tr " " "%" )
-
         if [ $DEBUG = "d" ]; then
-	    echo ! Doing bandmath $num in $PROCESS
-	    echo $OUTPUT_DIR
-            echo $IMAGE_TYPE
-            echo $PROCESS
-            echo $PATH_TO_IMAGES
-            echo $NUM_PATHS
-            echo $WORKFLOW
-            echo multipro add by bandmath num loop
-            read sodcosh
-	    fi
-	add_band_math $DEBUG $OUTPUT_DIR $IMAGE_TYPE $PROCESS $PATH_TO_IMAGES $NUM_PATHS $WORKFLOW
+	    get_debug
+	fi
+	./add_band_math "$DEBUG" "$OUTPUT_DIR" "$INPUT_DIR" "$IMAGE_TYPE" "$PROCESS" "$PATH_TO_IMAGES" "$NUM_PATHS" "$WORKFLOW" "$BAND_PAN" "$BAND_BLUE" "$BAND_GREEN" "$BAND_RED" "$BAND_NIR" "$BAND_CA" "$BAND_RE" "$BAND_SWIR"
     elif [ "$num" = 3 ]
     then
         PROCESS=$( echo $PROCESS | tr " " "%" )
-        get_file_names $OUTPUT_DIR $num
+        get_file_names $OUTPUT_DIR $count
         get_num_paths $PATH_TO_IMAGES
         PATH_TO_IMAGES=$( echo $new_PATH_TO_IMAGES | tr " " "%" )
-
 	if [ $DEBUG = "d" ]; then
-            echo ! Doing remove_band $num in $PROCESS
-            echo $OUTPUT_DIR
-            echo $IMAGE_TYPE
-            echo $PROCESS
-            echo $PATH_TO_IMAGES
-            echo $NUM_PATHS
-            echo $WORKFLOW
-            echo multipro BandMath num loop
-            read sodcosh
+	    get_debug "passing to band math $num in $PROCESS"
 	fi
-	band_math $DEBUG $OUTPUT_DIR $IMAGE_TYPE $PROCESS $PATH_TO_IMAGES $NUM_PATHS $WORKFLOW
+	./band_math "$DEBUG" "$OUTPUT_DIR" "$INPUT_DIR" "$IMAGE_TYPE" "$PROCESS" "$PATH_TO_IMAGES" "$NUM_PATHS" "$WORKFLOW" "$BAND_PAN" "$BAND_BLUE" "$BAND_GREEN" "$BAND_RED" "$BAND_NIR" "$BAND_CA" "$BAND_RE" "$BAND_SWIR"
     elif [ "$num" = 4 ]
     then
 	PROCESS=$( echo $PROCESS | tr " " "%" )
-	get_file_names $OUTPUT_DIR $num
+	get_file_names $OUTPUT_DIR $count
 	get_num_paths $PATH_TO_IMAGES
 	PATH_TO_IMAGES=$( echo $new_PATH_TO_IMAGES | tr " " "%" )
-
 	if [ $DEBUG = "d" ]; then
-	    echo ! Doing remove_band $num in $PROCESS
-	    echo $OUTPUT_DIR
-            echo $IMAGE_TYPE
-            echo $PROCESS
-            echo $PATH_TO_IMAGES
-            echo $NUM_PATHS
-            echo $WORKFLOW
-            echo multipro remove_band num loop
-            read sodcosh
+	    get_debug "passing to remove band"
 	fi
-	remove_band $DEBUG $OUTPUT_DIR $IMAGE_TYPE $PROCESS $PATH_TO_IMAGES $NUM_PATHS $WORKFLOW
+	./remove_band "$DEBUG" "$OUTPUT_DIR" "$INPUT_DIR" "$IMAGE_TYPE" "$PROCESS" "$PATH_TO_IMAGES" "$NUM_PATHS" "$WORKFLOW" "$BAND_PAN" "$BAND_BLUE" "$BAND_GREEN" "$BAND_RED" "$BAND_NIR" "$BAND_CA" "$BAND_RE" "$BAND_SWIR"
     elif [ "$num" = 5 ]
     then
 	PROCESS=$( echo $PROCESS | tr " " "%" )
-	get_file_names $OUTPUT_DIR $num
+	get_file_names $OUTPUT_DIR $count
 	get_num_paths $PATH_TO_IMAGES
 	PATH_TO_IMAGES=$( echo $new_PATH_TO_IMAGES | tr " " "%" )
-
 	if [ $DEBUG = "d" ]; then
-	    echo ! Doing concatonate $num in $PROCESS
-	    echo $OUTPUT_DIR
-            echo $IMAGE_TYPE
-            echo $PROCESS
-            echo $PATH_TO_IMAGES
-            echo $NUM_PATHS
-            echo $WORKFLOW
-            echo multipro concatonate num loop
-            read sodcosh
+	    get_debug "passing to concatonate"
 	fi
-	concatonate $DEBUG $OUTPUT_DIR $IMAGE_TYPE $PROCESS $PATH_TO_IMAGES $NUM_PATHS $WORKFLOW
+	./concatonate "$DEBUG" "$OUTPUT_DIR" "$INPUT_DIR" "$IMAGE_TYPE" "$PROCESS" "$PATH_TO_IMAGES" "$NUM_PATHS" "$WORKFLOW" "$BAND_PAN" "$BAND_BLUE" "$BAND_GREEN" "$BAND_RED" "$BAND_NIR" "$BAND_CA" "$BAND_RE" "$BAND_SWIR"
     elif [ "$num" = 6 ]
     then
 	PROCESS=$( echo $PROCESS | tr " " "%" )
-        get_file_names $OUTPUT_DIR $num
+        get_file_names $OUTPUT_DIR $count
 	get_num_paths $PATH_TO_IMAGES
 	PATH_TO_IMAGES=$( echo $new_PATH_TO_IMAGES | tr " " "%" )
 
 	if [ $DEBUG = "d" ]; then
-	    echo ! Doing LSMS $num in $PROCESS
-	    echo $OUTPUT_DIR
-            echo $IMAGE_TYPE
-            echo $PROCESS
-            echo $PATH_TO_IMAGES
-            echo $NUM_PATHS
-            echo $WORKFLOW
-            echo multipro LSMS num loop
-            read sodcosh
+	    get_debug "passing to lsms"
 	fi
-        large_scale_mean_shift $DEBUG $OUTPUT_DIR $IMAGE_TYPE $PROCESS $PATH_TO_IMAGES $NUM_PATHS $WORKFLOW
+        ./large_scale_mean_shift "$DEBUG" "$OUTPUT_DIR" "$INPUT_DIR" "$IMAGE_TYPE" "$PROCESS" "$PATH_TO_IMAGES" "$NUM_PATHS" "$WORKFLOW" "$BAND_PAN" "$BAND_BLUE" "$BAND_GREEN" "$BAND_RED" "$BAND_NIR" "$BAND_CA" "$BAND_RE" "$BAND_SWIR"
     elif [ "$num" = 7 ]
     then
 	PROCESS=$( echo $PROCESS | tr " " "%" )
-        get_file_names $OUTPUT_DIR $num
+        get_file_names $OUTPUT_DIR $count
 	get_num_paths $PATH_TO_IMAGES
-
 	if [ $DEBUG = "d" ]; then
-	    echo ! Doing mosaic $num in $PROCESS
-	    echo $OUTPUT_DIR
-            echo $IMAGE_TYPE
-            echo $PROCESS
-            echo $PATH_TO_IMAGES
-            echo $NUM_PATHS
-            echo $WORKFLOW
-            echo multipro mosaic num loop
-            read sodcosh
+	    get_debug "Doing mosaic $num in $PROCESS"
 	fi
-        mosaic $DEBUG $OUTPUT_DIR $IMAGE_TYPE $PROCESS $PATH_TO_IMAGES $NUM_PATHS $WORKFLOW
+        ./mosaic "$DEBUG" "$OUTPUT_DIR" "$INPUT_DIR" "$IMAGE_TYPE" "$PROCESS" "$PATH_TO_IMAGES" "$NUM_PATHS" "$WORKFLOW" "$BAND_PAN" "$BAND_BLUE" "$BAND_GREEN" "$BAND_RED" "$BAND_NIR" "$BAND_CA" "$BAND_RE" "$BAND_SWIR"
     elif [ "$num" = 8 ]
     then
 	PROCESS=$( echo $PROCESS | tr " " "%" )
-	get_file_names $OUTPUT_DIR $num
+	get_file_names $OUTPUT_DIR $count
 	get_num_paths $PATH_TO_IMAGES
 	PATH_TO_IMAGES=$( echo $new_PATH_TO_IMAGES | tr " " "%" )
-
 	if [ $DEBUG = "d" ]; then
-	    echo ! Doing extract_roi $num in $PROCESS
-	    echo $OUTPUT_DIR
-            echo $IMAGE_TYPE
-            echo $PROCESS
-            echo $PATH_TO_IMAGES
-            echo $NUM_PATHS
-            echo $WORKFLOW
-            echo multipro extract_roi num loop
-            read sodcosh
+	    get_debug "Doing extract_roi $num in $PROCESS"
 	fi
-	extract_roi $DEBUG $OUTPUT_DIR $IMAGE_TYPE $PROCESS $PATH_TO_IMAGES $NUM_PATHS $WORKFLOW
+	./extract_roi "$DEBUG" "$OUTPUT_DIR" "$INPUT_DIR" "$IMAGE_TYPE" "$PROCESS" "$PATH_TO_IMAGES" "$NUM_PATHS" "$WORKFLOW" "$BAND_PAN" "$BAND_BLUE" "$BAND_GREEN" "$BAND_RED" "$BAND_NIR" "$BAND_CA" "$BAND_RE" "$BAND_SWIR"
     elif [ "$num" = 9 ]
     then
 	PROCESS=$( echo $PROCESS | tr " " "%" )
-        get_file_names $OUTPUT_DIR $num
+        get_file_names $OUTPUT_DIR $count
 	get_num_paths $PATH_TO_IMAGES
 	PATH_TO_IMAGES=$( echo $new_PATH_TO_IMAGES | tr " " "%" )
-
 	if [ $DEBUG = "d" ]; then
-	    echo ! Doing unzip $num in $PROCESS
-	    echo $OUTPUT_DIR
-	    echo $IMAGE_TYPE
-	    echo $PROCESS
-	    echo $PATH_TO_IMAGES
-	    echo $NUM_PATHS
-	    echo $WORKFLOW
-	    echo multipro unzip num loop
-	    read sodcosh
+	    get_debug "passing to unzip"
 	fi
-	unzip_files $DEBUG $OUTPUT_DIR $IMAGE_TYPE $PROCESS $PATH_TO_IMAGES $NUM_PATHS $WORKFLOW
+	./unzip_files "$DEBUG" "$OUTPUT_DIR" "$INPUT_DIR" "$IMAGE_TYPE" "$PROCESS" "$PATH_TO_IMAGES" "$NUM_PATHS" "$WORKFLOW" "$BAND_PAN" "$BAND_BLUE" "$BAND_GREEN" "$BAND_RED" "$BAND_NIR" "$BAND_CA" "$BAND_RE" "$BAND_SWIR"
     elif [ "$num" = 10 ]
     then
 	PROCESS=$( echo $PROCESS | tr " " "%" )
-        get_file_names $OUTPUT_DIR $num
+        get_file_names $OUTPUT_DIR $count
         get_num_paths $PATH_TO_IMAGES
         PATH_TO_IMAGES=$( echo $new_PATH_TO_IMAGES | tr " " "%" )
-	
         if [ $DEBUG = "d" ]; then
-            echo ! Doing cloud detect $num in $PROCESS
-            echo $OUTPUT_DIR
-            echo $IMAGE_TYPE
-            echo $PROCESS
-            echo $PATH_TO_IMAGES
-            echo $NUM_PATHS
-            echo $WORKFLOW
-            echo multipro cloud detect num loop
-            read sodcosh
+            get_debug "Doing cloud detect $num in $PROCESS"
         fi
-	cloud_detector $DEBUG $OUTPUT_DIR $IMAGE_TYPE $PROCESS $PATH_TO_IMAGES $NUM_PATHS $WORKFLOW
+	./cloud_detector "$DEBUG" "$OUTPUT_DIR" "$INPUT_DIR" "$IMAGE_TYPE" "$PROCESS" "$PATH_TO_IMAGES" "$NUM_PATHS" "$WORKFLOW" "$BAND_PAN" "$BAND_BLUE" "$BAND_GREEN" "$BAND_RED" "$BAND_NIR" "$BAND_CA" "$BAND_RE" "$BAND_SWIR"
     else
 	echo no process for that number
     fi
