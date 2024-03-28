@@ -30,5 +30,5 @@ $ geomundo
 * [Orfetoolbox](https://www.orfeo-toolbox.org/) - Open Source processing of remote sensing images
 * [Bash](https://www.gnu.org/software/bash/) - Bash is the Bourne Again SHell
 
-# Geomundo!
+# Geomundo
 
